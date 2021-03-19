@@ -1,0 +1,31 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+# Contributor: Jerome Leclanche <jerome@leclan.ch>
+# Contributor: Isaac Dupree <antispam@idupree.com>
+
+pkgbasename=sassc
+pkgname=$pkgbasename-35x
+pkgver=3.5.0
+pkgrel=1
+pkgdesc="C implementation of Sass CSS preprocessor version 3.5."
+arch=("x86_64")
+url="http://libsass.org/"
+license=("MIT")
+depends=("libsass-35x")
+source=("$pkgbasename-$pkgver.tar.gz::https://github.com/sass/$pkgbasename/archive/$pkgver.tar.gz")
+sha256sums=('26f54e31924b83dd706bc77df5f8f5553a84d51365f0e3c566df8de027918042')
+
+
+build() {
+	cd "$srcdir/$pkgbasename-$pkgver"
+
+	autoreconf -i
+	./configure --prefix=/opt/$pkgname --with-libsass=/opt/libsass-35x
+	make
+}
+
+package() {
+	cd "$srcdir/$pkgbasename-$pkgver"
+
+	make DESTDIR="$pkgdir/" install
+	install -D -m644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
