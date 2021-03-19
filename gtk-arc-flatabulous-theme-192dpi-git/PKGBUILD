@@ -42,15 +42,15 @@ check_optdepends() {
 
 build() {
 
-	export OPTION_GTK2_HIDPI="true"
-	export SASSC=/opt/sassc-35x/bin/sassc
+    export OPTION_GTK2_HIDPI="true"
+    export SASSC=/opt/sassc-35x/bin/sassc
 
     # Check optional dependencies
     check_optdepends
 
-	# Force support for gnome-shell 3.38
-	cd "${srcdir}/${pkgbasename}/common/gnome-shell"
-	ln -s 3.32 3.38
+    # Force support for gnome-shell 3.38
+    cd "${srcdir}/${pkgbasename}/common/gnome-shell"
+    ln -s 3.32 3.38
 
     cd "${srcdir}/${pkgbasename}"
     ./autogen.sh ${_autogen_options[@]} --prefix=/usr

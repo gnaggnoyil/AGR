@@ -15,17 +15,17 @@ sha256sums=("487ca58f1dfdc4055079af04f0ad120747385d3b3926b1c8f46e4b00540fdb70")
 
 
 build() {
-	cd "$srcdir/$pkgbasename-$pkgver"
+    cd "$srcdir/$pkgbasename-$pkgver"
 
-	export LIBSASS_VERSION="$pkgver"
-	autoreconf -i
-	./configure --prefix=/opt/$pkgname
-	make
+    export LIBSASS_VERSION="$pkgver"
+    autoreconf -i
+    ./configure --prefix=/opt/$pkgname
+    make
 }
 
 package() {
-	cd "$srcdir/$pkgbasename-$pkgver"
+    cd "$srcdir/$pkgbasename-$pkgver"
 
-	make DESTDIR="$pkgdir/" install
-	install -D -m644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    make DESTDIR="$pkgdir/" install
+    install -D -m644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
