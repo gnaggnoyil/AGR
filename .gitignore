@@ -2,3 +2,6 @@
 **/src/*
 **/*.tar.gz
 **/*.pkg.tar*
+**/.BUILDINFO
+**/.MTREE
+**/.PKGINFO
