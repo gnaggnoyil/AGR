@@ -1,0 +1,63 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+# Contributor: acxz <akashpatel2008 at yahoo dot com>
+# Contributor: Joaquin Garmendia <joaquingc123 at gmail dot com>
+# Contributor: Orestis Floros <orestisf1993@gmail.com>
+
+pkgbasename=arc-flatabulous-theme
+pkgname=gtk-$pkgbasename-192dpi-git
+pkgver=r911.cdc3752
+pkgrel=1
+pkgdesc="Arc theme with Flatabulous window controls, 192dpi version."
+arch=('any')
+url="https://github.com/andreisergiu98/${pkgbasename}"
+license=('GPL3')
+depends=()
+makedepends=('git' 'autoconf' 'automake' 'sassc-35x' 'optipng' 'inkscape')
+optdepends=('gtk-engine-murrine: for gtk2 themes'
+            'gnome-themes-extra: for gtk2 themes'
+            'gtk3: for gtk3 themes'
+            'gnome-shell: for detecting GNOME Shell version'
+)
+provides=('gtk-arc-flatabulous-theme')
+conflicts=('gtk-arc-flatabulous-theme' 'gtk-arc-flatabulous-theme-git')
+source=("git+${url}")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "${srcdir}/${pkgbasename}"
+    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+_autogen_options=()
+
+check_optdepends() {
+    # Check if gnome-shell is installed
+    if (pacman -Qq gnome-shell > /dev/null) ; then
+        msg "Enabling GNOME Shell support"
+    else
+        msg "Disabling GNOME Shell support"
+        _autogen_options=(${_autogen_options[@]} --disable-gnome-shell)
+    fi
+}
+
+build() {
+
+	export OPTION_GTK2_HIDPI="true"
+	export SASSC=/opt/sassc-35x/bin/sassc
+
+    # Check optional dependencies
+    check_optdepends
+
+	# Force support for gnome-shell 3.38
+	cd "${srcdir}/${pkgbasename}/common/gnome-shell"
+	ln -s 3.32 3.38
+
+    cd "${srcdir}/${pkgbasename}"
+    ./autogen.sh ${_autogen_options[@]} --prefix=/usr
+    make
+}
+
+package() {
+    cd "${srcdir}/${pkgbasename}"
+    make DESTDIR="${pkgdir}" install
+}
