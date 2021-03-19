@@ -5,18 +5,24 @@
 pkgbasename=sassc
 pkgname=$pkgbasename-35x
 pkgver=3.5.0
-pkgrel=1
+pkgrel=2
 pkgdesc="C implementation of Sass CSS preprocessor version 3.5."
 arch=("x86_64")
 url="http://libsass.org/"
 license=("MIT")
 depends=("libsass-35x")
-source=("$pkgbasename-$pkgver.tar.gz::https://github.com/sass/$pkgbasename/archive/$pkgver.tar.gz")
-sha256sums=('26f54e31924b83dd706bc77df5f8f5553a84d51365f0e3c566df8de027918042')
+source=(
+	"$pkgbasename-$pkgver.tar.gz::https://github.com/sass/$pkgbasename/archive/$pkgver.tar.gz"
+	fix_libsass_search_path.patch
+)
+sha256sums=('26f54e31924b83dd706bc77df5f8f5553a84d51365f0e3c566df8de027918042'
+            '1ba3d14c1fa9b5e60f31f772afce97ea903e6181ecc2f91919e312898a0060bb')
 
 
 build() {
 	cd "$srcdir/$pkgbasename-$pkgver"
+
+	patch -i "${srcdir}/fix_libsass_search_path.patch" -p1
 
 	autoreconf -i
 	./configure --prefix=/opt/$pkgname --with-libsass=/opt/libsass-35x

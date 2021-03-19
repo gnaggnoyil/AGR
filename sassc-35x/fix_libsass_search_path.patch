@@ -1,0 +1,22 @@
+diff --git a/configure.ac b/configure.ac
+index 40c1ebe..52a1f09 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -19,7 +19,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([no])])
+ AC_ARG_WITH([libsass],
+   [AS_HELP_STRING([--with-libsass],
+     [libsass install location])],
+-  [LDFLAGS="$LDFLAGS -L$withval/lib"]
++  [LDFLAGS="$LDFLAGS -L$withval/lib -Wl,-rpath=$withval/lib"]
+   [CPPFLAGS="$CPPFLAGS -I$withval/include"])
+ 
+ # this is discouraged, use `with-libsass`:
+@@ -28,7 +28,7 @@ AC_ARG_WITH([libsass-lib],
+     [location of libsass library])],
+   [AC_MSG_WARN([use of --with-libsass-lib is discouraged!
+   use new syntax: ./configure --with-libsass="prefix"])]
+-  [LDFLAGS="$LDFLAGS -L$withval"])
++  [LDFLAGS="$LDFLAGS -L$withval -Wl,-rpath=$withval"])
+ 
+ # this is discouraged, use `with-libsass`:
+ # ./configure INCLUDE_PATH="build/include"
