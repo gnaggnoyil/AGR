@@ -1,0 +1,65 @@
+_append_preload_entry(){
+	_hook_name=$1
+	if [[ ! -f /etc/ld.so.preload ]]; then
+		touch /etc/ld.so.preload
+	fi
+	_preload_files=$(cat /etc/ld.so.preload)
+	IFS=": " read -r -a _preload_file_lists <<< "$_preload_files"
+	for _preload_file in "${_preload_file_lists[@]}"; do
+		_modified_preload_files="${_modified_preload_files} ${_preload_file}"
+	done
+	echo "$_modified_preload_files /usr/lib/libwsl_issue_4898.so" > /etc/ld.so.preload
+}
+
+_remove_preload_entry() {
+	_hook_name=$1
+	if [[ ! -f /etc/ld.so.preload ]]; then
+		echo "Warning: /etc/ld.so.preload is missing. This indicates a brute force modification during lifetime of the package."
+		echo "Skipping $_hook_name hooks"
+		return
+	fi
+	_preload_files=$(cat /etc/ld.so.preload)
+	IFS=": " read -r -a _preload_file_lists <<< "$_preload_files"
+	for _preload_file in "${_preload_file_lists[@]}"; do
+		if [[ "x$_preload_file" ==  "x/usr/lib/libwsl_issue_4898.so" ]]; then
+			continue
+		fi
+		_modified_preload_files="${_modified_preload_files} ${_preload_file}"
+	done
+	echo "$_modified_preload_files" > /etc/ld.so.preload
+}
+
+pre_install() {
+	#echo "pre_install"
+	:
+}
+
+post_install() {
+	#echo "post_install"
+
+	_append_preload_entry "post_install"
+}
+
+pre_upgrade() {
+	#echo "pre_upgrade"
+	_remove_preload_entry "pre_upgrade"
+}
+
+post_upgrade() {
+	#echo "post_upgrade"
+	
+	_append_preload_entry "post_upgrade"
+}
+
+pre_remove() {
+	#echo "pre_remove"
+
+	_remove_preload_entry "pre_remove"
+
+	#sed -i -e "s/\/usr\/local\/lib\/libwsl_issue_4898\.so//g" /etc/ld.so.preload
+}
+
+post_remove() {
+	#echo "post_remove"
+	:
+}
