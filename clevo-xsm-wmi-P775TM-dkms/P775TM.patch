@@ -1,0 +1,20 @@
+diff --git a/module/clevo-xsm-wmi.c b/module/clevo-xsm-wmi.c
+index 0c7e3e8..26ec342 100644
+--- a/module/clevo-xsm-wmi.c
++++ b/module/clevo-xsm-wmi.c
+@@ -1646,6 +1646,15 @@ static struct dmi_system_id clevo_xsm_dmi_table[] __initdata = {
+ 		.callback = clevo_xsm_dmi_matched,
+ 		.driver_data = &kb_full_color_ops,
+ 	},
++	{
++		.ident = "Clevo P7xxTM1(-G)",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_NAME, "P7xxTM/TM1(-G)"),
++		},
++		.callback = clevo_xsm_dmi_matched,
++		// TODO: check whether this model supports extra kb color cmd or not
++		.driver_data = &kb_full_color_ops,
++	},
+ 	{
+ 		/* terminating NULL entry */
+ 	},
