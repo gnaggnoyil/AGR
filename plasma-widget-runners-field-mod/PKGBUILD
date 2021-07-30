@@ -1,6 +1,8 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
 pkgname=plasma-widget-runners-field-mod
 pkgver=v0.0.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Allow krunner search field to be placed inside panel as widget (like Cortana search field of Windows 10)"
 arch=('any')
 url="https://github.com/gnaggnoyil/$pkgname"
@@ -8,7 +10,6 @@ license=('LGPL3')
 depends=()
 makedepends=(
     'git'
-    'autoconf'
     'cmake>=2.8.12'
     'extra-cmake-modules>=0.0.11'
     'plasma-framework>=5.0.0'
