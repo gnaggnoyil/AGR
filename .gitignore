@@ -3,6 +3,7 @@
 **/*.tar.gz
 **/*.tar.bz2
 **/*.pkg.tar*
+**/*.zip
 **/.BUILDINFO
 **/.MTREE
 **/.PKGINFO
