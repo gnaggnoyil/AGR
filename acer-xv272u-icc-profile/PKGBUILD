@@ -1,0 +1,33 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
+pkgname=acer-xv272u-icc-profile
+pkgver=1.0.0.0
+pkgrel=1
+pkgdesc="ICC profile in Acer XV272U drivers"
+arch=('any')
+url="https://www.acer.com/"
+license=('custom')
+depends=()
+makedepends=(
+    'unzip'
+)
+source=(
+    "driver.zip::https://global-download.acer.com/GDFiles/Driver/Monitor/Monitor_Acer_1.0_W7x86W7x64W8x86W8x64W81x86W81x64W10x86W10x64_A.zip?acerid=636778569893289924&Step1=MONITOR&Step2=XV%20SERIES&Step3=XV272U&OS=ALL&LC=en&BC=ACER&SC=EMEA_27"
+    "LICENSE.pdf::https://static.acer.com/up/Resource/Acer/Docs/Legal/20180524/Acer%20-EULA%20(English)%20Jun%2029,%202012.pdf"
+)
+noextract=('driver.zip')
+sha256sums=('3e170086350a998684f3cfbbda36d70c8da337fbbdbe13fcefb28c270ace3f47'
+            'bc3c049e2f410f335cdd1f2c08f46ee25bfad47b32e03cba23d72b0509f5ab43')
+
+prepare() {
+    cd "${srcdir}"
+    unzip driver.zip -d "${srcdir}/${pkgname}"
+}
+
+package() {
+    cd "${srcdir}/${pkgname}"
+    install -Dm 644 XV272U.icm -t "${pkgdir}/usr/share/color/icc/acer_xv272u"
+
+    cd "${srcdir}"
+    install -Dm644 LICENSE.pdf -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
