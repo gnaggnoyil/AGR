@@ -1,0 +1,33 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
+pkgname=acer-kg251q-icc-profile
+pkgver=1.0
+pkgrel=1
+pkgdesc="ICC profile in Acer KG251Q drivers"
+arch=('any')
+url="https://www.acer.com/"
+license=('custom')
+depends=()
+makedepends=(
+    'unzip'
+)
+source=(
+    "driver.zip::https://global-download.acer.com/GDFiles/Driver/Monitor/Monitor_Acer_1.0_W7x86W7x64W8x86W8x64_A.zip?acerid=636226626446792272&Step1=MONITOR&Step2=KG%20SERIES&Step3=KG251Q&OS=ALL&LC=en&BC=ACER&SC=PA_6"
+    "LICENSE.pdf::https://static.acer.com/up/Resource/Acer/Docs/Legal/20180524/Acer%20-EULA%20(English)%20Jun%2029,%202012.pdf"
+)
+noextract=('driver.zip')
+sha256sums=('3a7a0901bab03352cb2a883db2e74266410910c9778cfdb55fe657fdc8c42bd5'
+            'bc3c049e2f410f335cdd1f2c08f46ee25bfad47b32e03cba23d72b0509f5ab43')
+
+prepare() {
+    cd "${srcdir}"
+    unzip driver.zip -d "${srcdir}/${pkgname}"
+}
+
+package() {
+    cd "${srcdir}/${pkgname}/Monitor_Acer_1.0_W7W8x86x64/519e37a0-f236-4027-a025-28d24c617ee2"
+    install -Dm 644 KG251Q.icm -t "${pkgdir}/usr/share/color/icc/acer_kg251q"
+
+    cd "${srcdir}"
+    install -Dm644 LICENSE.pdf -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
