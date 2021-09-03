@@ -6,7 +6,7 @@
 pkgbasename=arc-flatabulous-theme
 pkgname=gtk-$pkgbasename-192dpi-git
 pkgver=r911.cdc3752
-pkgrel=2
+pkgrel=3
 pkgdesc="Arc theme with Flatabulous window controls, 192dpi version."
 arch=('any')
 url="https://github.com/andreisergiu98/${pkgbasename}"
@@ -50,7 +50,7 @@ build() {
 
     # Force support for gnome-shell 3.38
     cd "${srcdir}/${pkgbasename}/common/gnome-shell"
-    ln -s 3.32 40.2
+    ln -s 3.32 40.4
 
     cd "${srcdir}/${pkgbasename}"
     ./autogen.sh ${_autogen_options[@]} --prefix=/usr
