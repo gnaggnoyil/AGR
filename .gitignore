@@ -2,6 +2,7 @@
 **/src/*
 **/*.tar.gz
 **/*.tar.bz2
+**/*.tar.xz
 **/*.pkg.tar*
 **/*.zip
 **/.BUILDINFO
