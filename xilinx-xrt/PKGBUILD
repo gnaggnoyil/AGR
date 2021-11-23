@@ -1,0 +1,21 @@
+pkgname=xilinx-xrt
+pkgver=2021.2
+pkgrel=1
+pkgdesc="Xilinx Run Time for FPGA, with its dkms modules"
+arch=('x86_64')
+url="https://github.com/Xilinx/XRT"
+license=('EULA')
+depends=(ocl-icd)
+optdepends=(vivado)
+provides=('xrt-bin')
+# No idea why this link is put in such a seemingly unrevalant page.
+# (https://support.xilinx.com/s/question/0D52E00006hpPUGSA2/xrt-for-ubuntu-2004-lts?language=en_US)
+source=('https://www.xilinx.com/bin/public/openDownload?filename=xrt_202120.2.12.427_20.04-amd64-xrt.deb')
+sha256sums=('10a410392d6ddf20dc58297b078c3e0054efeecef856935fabcb7fd6fe686302')
+
+package() {
+    # Libalpm DKMS hook will detect `dkms.conf` and include headers in `/usr/src` and then trigger a dkms build.
+	tar -zxf data.tar.gz -C "${pkgdir}"
+	mv "${pkgdir}/lib" "${pkgdir}/usr/lib"
+	mv "${pkgdir}/opt/xilinx" "${pkgdir}/opt/Xilinx"
+}
