@@ -1,21 +1,56 @@
 pkgname=xilinx-xrt
 pkgver=2021.2
-pkgrel=1
+_pkgrelasever=2.12
+_pkgpatchver=427
+pkgrel=2
 pkgdesc="Xilinx Run Time for FPGA, with its dkms modules"
 arch=('x86_64')
 url="https://github.com/Xilinx/XRT"
 license=('EULA')
-depends=(ocl-icd)
+# TODO: check how 'libxcrypt'(libcrypt.so) is used.
+# TODO: check how 'find_package(Curses)' is used.
+# TODO: check for a complete list of dependencies
+depends=('dkms' 'ocl-icd' 'boost-libs' 'libxcrypt')
+makedepends=('boost')
 optdepends=(vivado)
-provides=('xrt-bin')
+provides=('xrt')
+conflicts=('xrt-bin')
 # No idea why this link is put in such a seemingly unrevalant page.
 # (https://support.xilinx.com/s/question/0D52E00006hpPUGSA2/xrt-for-ubuntu-2004-lts?language=en_US)
-source=('https://www.xilinx.com/bin/public/openDownload?filename=xrt_202120.2.12.427_20.04-amd64-xrt.deb')
-sha256sums=('10a410392d6ddf20dc58297b078c3e0054efeecef856935fabcb7fd6fe686302')
+#source=('https://www.xilinx.com/bin/public/openDownload?filename=xrt_202120.2.12.427_20.04-amd64-xrt.deb')
+#sha256sums=('10a410392d6ddf20dc58297b078c3e0054efeecef856935fabcb7fd6fe686302')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Xilinx/XRT/archive/$pkgver.tar.gz")
+md5sums=('4d7fcc542422e053b29dbdc3a405698f')
 
+build() {
+	export XRT_VERSION_PATCH=$_pkgpatchver
+
+	mkdir -p "$srcdir/XRT-$pkgver/release_build"
+	cd "$srcdir/XRT-$pkgver/release_build"
+	cmake ../src \
+		-DCMAKE_BUILD_TYPE=Release
+	make
+}
+
+# ERT is not built according to warnings in cmake files.
+# xrt-aws dkms module is installed.
+# TODO: check other differences and find what those differences will mean.
 package() {
     # Libalpm DKMS hook will detect `dkms.conf` and include headers in `/usr/src` and then trigger a dkms build.
-	tar -zxf data.tar.gz -C "${pkgdir}"
-	mv "${pkgdir}/lib" "${pkgdir}/usr/lib"
-	mv "${pkgdir}/opt/xilinx" "${pkgdir}/opt/Xilinx"
+	
+	export XRT_VERSION_PATCH=$_pkgpatchver
+
+	cd "$srcdir/XRT-$pkgver/release_build"
+	DESTDIR="$pkgdir" make install
+
+	install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
+
+# ==> dkms remove --no-depmod xrt/2.12.427 -k 5.10.78.55.realtime1-1-rt-lts
+# ==> dkms remove --no-depmod xrt/2.12.427 -k 5.10.81-1-lts
+# ==> dkms remove --no-depmod xrt-aws/2.12.427 -k 5.10.78.55.realtime1-1-rt-lts
+# ==> dkms remove --no-depmod xrt-aws/2.12.427 -k 5.10.81-1-lts
+# ==> dkms remove --no-depmod xrt-aws/2.12.427 -k 5.14.18-hardened1-1-hardened
+# ==> dkms remove --no-depmod xrt-aws/2.12.427 -k 5.15.3.21.realtime1-1-rt
+# ==> dkms remove --no-depmod xrt-aws/2.12.427 -k 5.15.4-arch1-1
+# ==> dkms remove --no-depmod xrt-aws/2.12.427 -k 5.15.4-zen1-1-zen
