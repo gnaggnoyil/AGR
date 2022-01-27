@@ -1,0 +1,58 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
+pkgbasename=platformlab-nanolog
+pkgname=${pkgbasename}-git
+pkgauthor="PlatformLab"
+pkgorigname="NanoLog"
+pkgver=0.91.r27.g2a94d70
+pkgrel=1
+pkgdesc="An extremely performant nanosecond scale logging system for C++."
+arch=('x86_64' 'i686') # This package requires rdtsc
+url="https://github.com/${pkgauthor}/${pkgorigname}"
+license=('custom:ISC')
+depends=('python' 'make' 'gcc') # AIO is bundled with glibc
+makedepends=('git')
+source=("git+https://github.com/${pkgauthor}/${pkgorigname}.git"
+        "git+https://github.com/google/googletest.git")
+sha256sums=('SKIP'
+            'SKIP')
+
+pkgver() {
+    cd "${srcdir}/${pkgorigname}"
+    git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+    cd "${srcdir}/${pkgorigname}"
+    git submodule init
+    git config submodule.googletest.url "${srcdir}/googletest"
+    git submodule update
+}
+
+build() {
+    cd "${srcdir}/${pkgorigname}/runtime"
+    make
+}
+
+check() {
+    cd "${srcdir}/${pkgorigname}/runtime"
+    make test
+    ./test
+}
+
+package() {
+    cd "${srcdir}/${pkgorigname}"
+    install -Dm644 -t "${pkgdir}/usr/lib" runtime/libNanoLog.a
+    install -Dm755 -t "${pkgdir}/usr/bin" runtime/decompressor
+    install -Dm644 -t "${pkgdir}/usr/include" runtime/*.h
+
+    cd "${srcdir}/${pkgorigname}"
+    install -Dm644 -t "${pkgdir}/usr/src/${pkgbasename}/runtime" runtime/*.h runtime/*.cc
+    install -Dm644 -t "${pkgdir}/usr/src/${pkgbasename}/runtime/testHelper" runtime/testHelper/client.cc
+    install -Dm644 -t "${pkgdir}/usr/src/${pkgbasename}/preprocessor" preprocessor/*.py
+    install -Dm644 -t "${pkgdir}/usr/src/${pkgbasename}/preprocessor/unitTestData" preprocessor/unitTestData/test_outputCompilationFiles.h
+    install -Dm644 -t "${pkgdir}/usr/src/${pkgbasename}" NanoLogMakeFrag
+
+    cd "${srcdir}/${pkgorigname}"
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
