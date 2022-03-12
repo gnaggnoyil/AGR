@@ -1,0 +1,213 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+# Contributor: Dmitry Popov <ixaphire@gmail.com>
+
+pkgbase=xgboost
+# `libxgboost.so` itself is just a normal C++ library and the python wrapper
+# directly loads that library and calls its C++ code inside it.
+# The setup.py user options `--use-cuda` and `--use-nccl` only affects how
+# setuptools builds its bundled libxgboost.so library. Thus, if setup.py uses a
+# previously built libxgboost.so file which lies under `$srcdir/lib` directory,
+# or if the `--use-system-libxgboost` option is specified (which makes setup.py
+# assume the existance of a system libxgboost.so, ignore any steps to bundle
+# that library, and just install the python wrapper), the above two options
+# won't have any effect.
+# Therefore, if we pass `--use-system-libxgboost` option, the python-xgboost
+# package will then just be a python wrapper for the `xgboost`/`xgboost-cuda`
+# library, and we don't need to spilt the wrapper package for `xgboost` and
+# `xgboost-cuda`
+pkgname=(
+    xgboost
+    xgboost-cuda
+    python-xgboost
+)
+pkgver=1.5.2
+pkgrel=1
+arch=('x86_64')
+url='https://github.com/dmlc/xgboost'
+license=('APACHE')
+# We have to use git repo here since github release archives does not contain
+# needed submodules nor even their info such as commit id
+_dependsbase=(
+    # Required for USE_HDFS
+    # When running extra-x86_64-build or makechrootpkg, a specific package that
+    # provides java-environment should be added through -I flags too. Otherwise
+    # pacman will keep asking to choose a provider and receiving "y" in return
+    # E.g. extra-x86_64-build -- -I ./jdk-openjdk-17.0.3.u3-1-x86_64.pkg.tar.zst -I ~/hadoop-3.3.1-1-x86_64.pkg.tar.gz
+    # Related commit: devtools#b7893a2
+    'hadoop'
+    # Hadoop itself does not tie to specified jdk-openjdk version and the
+    # libjvm.so library that dmlc-core links is just used to satisfy the need
+    # of libhdfs.so. However, as a package that explicitly depends on jvm
+    # shared libraries, I think we need to explicitly tie to the latest
+    # `java-environment`, a.k.a. `jdk-openjdk`` and its indirect dependency, 
+    # `jre-openjdk-headless`
+    'jdk-openjdk'
+    # Required for USE_S3
+    'curl'
+    'openssl' # May build a new package with openssl-1.0
+)
+_depends_xgboost_cuda=(
+    'cuda'
+    'nccl'
+)
+_depends_python_xgboost=(
+    'python>=3.6'
+    'python-numpy'
+    'python-scipy'
+)
+# TODO: find a way to add a desc on it
+_optdepends_python_xgboost=(
+    'python-pandas'
+    'python-scikit-learn'
+    'python-dask'
+    'python-distributed'
+    # There's no package that provides python-datatable in offical repo or AUR
+    #'python-datatable'
+    'python-graphviz'
+    'python-matplotlib'
+)
+makedepends=(
+    'cmake'
+    'git'
+    'python-setuptools'
+    
+    ${_dependsbase[@]}
+    ${_depends_xgboost_cuda[@]}
+    
+    ${_depends_python_xgboost[@]}
+    ${_optdepends_python_xgboost[@]}
+)
+source=(
+    "git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
+    'git+https://github.com/dmlc/dmlc-core'
+    'git+https://github.com/dmlc/rabit'
+    'git+https://github.com/NVlabs/cub'
+    '0001-python_no_libs.patch'
+    'dmlc_core-0001-disable_hdfs_static.patch'
+)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'a1877f1219f65a6a725afe317cb59b3f65324d26b4754b90dac7c0f4295b660b'
+            'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866')
+
+prepare() {
+    cd "${srcdir}/${pkgbase}"
+    git submodule init
+    git config submodule.dmlc-core.url "${srcdir}/dmlc-core"
+    git config submodule.rabit.url "${srcdir}/rabit"
+    git config submodule.cub.url "${srcdir}/cub"
+    git submodule update
+
+    patch -i "${srcdir}/0001-python_no_libs.patch" -p1
+    cd "${srcdir}/dmlc-core"
+    patch -i "${srcdir}/dmlc_core-0001-disable_hdfs_static.patch" -p1
+
+    # The `RUNTIME_OUTPUT_DIRECTORY` and `LIBRARY_OUTPUT_DIRECTORY` is set
+    # in the ${srcdir}. So we have to use two src directories to build xgboost
+    # and xgboost-cuda
+    mkdir -p "${srcdir}/${pkgbase}/build"
+    cp -r "${srcdir}/${pkgbase}" "${srcdir}/${pkgbase}-cuda"
+}
+
+build() {
+    _common_env=(
+        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.1
+        HADOOP_WORKERS=/etc/hadoop/workers
+        JAVA_HOME=/usr/lib/jvm/default
+    )
+
+    _common_args=(
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_PREFIX=/usr
+        -DBUILD_SHARED_LIBS=ON
+        # Required to add libhdfs.so and libjvm.so to rpath since these two
+        # libraries does not stay on normal ld library path.
+        -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
+
+        #-DUSE_OPENMP=ON # Default is ON
+        -DUSE_HDFS=ON # Default is OFF
+        # Required since aur/hadoop does not guarantee that a libhdfs.a exists.
+        -DDMLC_HDFS_SHARED=ON
+        -DUSE_S3=ON
+        # There's no azure-storage-cpp package in offical repo or in AUR.
+        #-DUSE_AZURE=OFF # Default is OFF
+    )
+
+    _cuda_env=(
+        CC=/opt/cuda/bin/gcc
+        CXX=/opt/cuda/bin/g++
+    )
+
+    # Do we need to build the package with shared libnccl.so instead of
+    # static libnccl_static.a ?
+    # MXNet uses shared nccl on UNIX if `CMAKE_BUILD_TYPE` is "Distribution".
+    # Not sure how do we set xgboost for that
+    _cuda_args=(
+        -DUSE_CUDA=ON
+        -DUSE_NCCL=ON
+        -DBUILD_WITH_SHARED_NCCL=ON
+        -DBUILD_WITH_CUDA_CUB=ON # Required for CUDA > 11.4
+        # According to $srcdir/dmoe/rmm_plugin we need a RMM package first to
+        # build RMM plugin. There's no package that provides RMM now in offical
+        # repo or in AUR.
+        #-DPLUGIN_RMM=OFF # Default is OFF
+    )
+
+    # For aur/hadoop, adding `--as-needed` in LDFLAGS will cause libxgboost.so
+    # unable to find libjvm.so that's been linked to libdmlc.so when linking
+    # libxgboost.so itself. Not sure the root cause of it.
+    LDFLAGS=${LDFLAGS/,--as-needed}
+    LDFLAGS=${LDFLAGS/ --as-needed}
+    if [ "x$LDFLAGS" = "x-Wl" ]; then
+        LDFLAGS=''
+    fi
+
+    echo "Building ${pkgbase}"
+    cd "${srcdir}/${pkgbase}/build"
+    env ${_common_env[@]} cmake ${_common_args[@]} ..
+    # MAKEFLAGS will automatically be read by GNU make
+    cmake --build . --config Release
+
+    echo "Building ${pkgbase}-cuda"
+    cd "${srcdir}/${pkgbase}-cuda/build"
+    env ${_common_env[@]} ${_cuda_env[@]} cmake ${_common_args[@]} ${_cuda_args[@]} ..
+    cmake --build . --config Release
+}
+
+package_xgboost() {
+    _pkgname=${pkgbase}
+    pkgdesc='An optimized distributed gradient boosting library designed to be highly efficient, flexible and portable'
+    provides=('xgboost' 'dmlc-core')
+    conflicts=('xgboost-cuda' 'xgboost-git')
+    depends+=(${_dependsbase[@]})
+
+    cd "${srcdir}/${pkgbase}/build"
+    DESTDIR=${pkgdir} make install
+    install -Dm644 "${srcdir}/${pkgbase}/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
+}
+
+package_xgboost-cuda() {
+    _pkgname=${pkgbase}-cuda
+    pkgdesc='An optimized distributed gradient boosting library designed to be highly efficient, flexible and portable (with CUDA)'
+    provides=('xgboost' 'dmlc-core')
+    conflicts=('xgboost' 'xgboost-git')
+    depends+=(${_dependsbase[@]} ${_depends_xgboost_cuda[@]})
+
+    cd "${srcdir}/${pkgbase}-cuda/build"
+    DESTDIR=${pkgdir} make install
+    install -Dm644 "${srcdir}/${pkgbase}-cuda/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
+}
+
+package_python-xgboost() {
+    _pkgname=python-${pkgbase}
+    pkgdesc='XGBoost Python 3 wrapper'
+    depends+=('xgboost' ${_depends_python_xgboost[@]})
+    optdepends+=(${_optdepends_python_xgboost[@]})
+    conflicts=('python-xgboost-git')
+
+    cd "${srcdir}/${pkgbase}/python-package"
+    python setup.py install --root="${pkgdir}" --optimize=1 --use-system-libxgboost
+    install -Dm644 "${srcdir}/${pkgbase}/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
+}
