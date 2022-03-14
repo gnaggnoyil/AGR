@@ -14,6 +14,7 @@
 # Outputs by extra-x86_65-build
 PKGBUILD-namcap.log
 *-build.log
+*-check.log
 *-package_*.log
 *-prepare.log
 *.pkg.tar*-namcap.log
