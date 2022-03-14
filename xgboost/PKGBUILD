@@ -21,7 +21,7 @@ pkgname=(
     python-xgboost
 )
 pkgver=1.5.2
-pkgrel=1
+pkgrel=2
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('APACHE')
@@ -80,8 +80,8 @@ makedepends=(
 source=(
     "git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
     'git+https://github.com/dmlc/dmlc-core'
-    'git+https://github.com/dmlc/rabit'
     'git+https://github.com/NVlabs/cub'
+    'git+https://github.com/rapidsai/gputreeshap.git'
     '0001-python_no_libs.patch'
     'dmlc_core-0001-disable_hdfs_static.patch'
 )
@@ -96,8 +96,8 @@ prepare() {
     cd "${srcdir}/${pkgbase}"
     git submodule init
     git config submodule.dmlc-core.url "${srcdir}/dmlc-core"
-    git config submodule.rabit.url "${srcdir}/rabit"
     git config submodule.cub.url "${srcdir}/cub"
+    git config submodule.gputreeshap.url "${srcdir}/gputreeshap"
     git submodule update
 
     patch -i "${srcdir}/0001-python_no_libs.patch" -p1
