@@ -16,5 +16,6 @@ PKGBUILD-namcap.log
 *-build.log
 *-check.log
 *-package_*.log
+*-package.log
 *-prepare.log
 *.pkg.tar*-namcap.log
