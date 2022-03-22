@@ -11,7 +11,7 @@
 **/.MTREE
 **/.PKGINFO
 .vscode/**
-# Outputs by extra-x86_65-build
+# Outputs by extra-x86_64-build
 PKGBUILD-namcap.log
 *-build.log
 *-check.log
