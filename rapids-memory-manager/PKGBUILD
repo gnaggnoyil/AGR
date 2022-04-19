@@ -1,0 +1,93 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
+_pkgbasename=rmm
+_pkgbasever=22.04
+pkgname=rapids-memory-manager
+pkgdesc='RAPIDS Memory Manager'
+pkgver=${_pkgbasever}.01
+pkgrel=1
+arch=('x86_64')
+url="https://github.com/rapidsai/${_pkgbasename}"
+license=('APACHE')
+depends=(
+    'cuda'
+    'spdlog>=1.8.5'
+    'thrust1.15'
+)
+# It's difficult to fit needs of the python binding so we'll not build this for now
+#_depends_python_rapids_rmm=(
+#    'python>=3.8'
+#    'python<3.10'
+#    'python-cuda>=11.6'
+#    'python-cuda<12.0'
+#    'python-numpy'
+#)
+#_makedepends_python_rapids_rmm=(
+#    'python-wheel'
+#    'python-scikit-build>=0.13.1'
+#    'cython>=0.29'
+#    'cython<0.30'
+#    'cmake>=3.20.1'
+#    'cmake<3.23'
+#    'ninja'
+#)
+makedepends=('cmake')
+_rapids_cmake_tag='7f24b28e7019e5fd6823fa5c7287d20861482396'
+_cpmver=0.35.0
+source=(
+    # RMM source specifies branch-${_pkgbasever} for rapids-cmake. Given that tag/v${_pkgbasever}.00a
+    # and branch-${_pkgbasever} are actuall different, we do the following to ensure a reproducible build:
+    # * Always choose the latest commit of branch-${_pkgbasever} when we started to bump version, and
+    #   never changes the commit id otherwise.
+    "rapids-cmake-${_rapids_cmake_tag}.tar.gz::https://github.com/rapidsai/rapids-cmake/archive/${_rapids_cmake_tag}.tar.gz"
+    "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/rapidsai/${_pkgbasename}/archive/v${pkgver}.tar.gz"
+    "https://github.com/cpm-cmake/CPM.cmake/releases/download/v${_cpmver}/CPM.cmake"
+    "rapids-cmake-0001-correctly-find-thrust-version.patch"
+    "${_pkgbasename}-0001-avoid-uncessary-download.patch"
+)
+sha256sums=('d85abc6520ad6615e852fc2103d40f401986747c1fed74f7327a924cfc1c943a'
+            '2989ecac7d29f1104f3bd8bf328f3345398faaf2164eea86a755ff204e4214fb'
+            '6c3015e0359c99994f65d248c8541a9cb02e03419d46961ce7d4e38b50d87635'
+            '6bdf0bb8272b798f1ebe1e5d1ca7bae34e374a8ba557dc26c7a88e5b9fbfb635'
+            '05f39fba0a7185673691debb1656e1a9618351867fc4d79c148fd0e0f46267f9')
+
+prepare() {
+    cd "${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
+    patch -i "${srcdir}/rapids-cmake-0001-correctly-find-thrust-version.patch" -p1
+
+    cd "${srcdir}/${_pkgbasename}-${pkgver}"
+    patch -i "${srcdir}/${_pkgbasename}-0001-avoid-uncessary-download.patch" -p1
+
+    cd "${srcdir}"
+    mkdir -p build
+    cd build
+    ln -s "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/RAPIDS.cmake" "RAPIDS.cmake"
+    mkdir -p cmake
+    ln -s "${srcdir}/CPM.cmake" "cmake/CPM_${_cpmver}.cmake"
+}
+
+build() {
+    _cmake_args=(
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_PREFIX=/usr
+
+        -DThrust_ROOT=/opt/thrust1.15
+        -DFETCHCONTENT_SOURCE_DIR_RAPIDS-CMAKE="${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
+        -DCPM_LOCAL_PACKAGES_ONLY=ON
+
+        # Disable check operations since check operations for cuda programs are not so well-defined.
+        -DBUILD_TESTS=OFF
+        #-DBUILD_BENCHMARKS=OFF # Default is OFF
+    )
+
+    cd "${srcdir}/build"
+    cmake "${_cmake_args[@]}" "${srcdir}/${_pkgbasename}-${pkgver}" # --log-level=VERBOSE
+    cmake --build . --config Release
+}
+
+package() {
+    cd "${srcdir}/build"
+    DESTDIR=${pkgdir} cmake --install . --config Release
+
+    install -Dm644 "${srcdir}/${_pkgbasename}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
