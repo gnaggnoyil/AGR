@@ -20,8 +20,8 @@ pkgname=(
     xgboost-cuda
     python-xgboost
 )
-pkgver=1.5.2
-pkgrel=2
+pkgver=1.6.0
+pkgrel=1
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('APACHE')
@@ -51,7 +51,7 @@ _depends_xgboost_cuda=(
     'nccl'
 )
 _depends_python_xgboost=(
-    'python>=3.6'
+    'python>=3.7'
     'python-numpy'
     'python-scipy'
 )
@@ -101,7 +101,7 @@ prepare() {
     git submodule update
 
     patch -i "${srcdir}/0001-python_no_libs.patch" -p1
-    cd "${srcdir}/dmlc-core"
+    cd "${srcdir}/${pkgbase}/dmlc-core"
     patch -i "${srcdir}/dmlc_core-0001-disable_hdfs_static.patch" -p1
 
     # The `RUNTIME_OUTPUT_DIRECTORY` and `LIBRARY_OUTPUT_DIRECTORY` is set
@@ -113,7 +113,7 @@ prepare() {
 
 build() {
     _common_env=(
-        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.1
+        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.2
         HADOOP_WORKERS=/etc/hadoop/workers
         JAVA_HOME=/usr/lib/jvm/default
     )
@@ -149,7 +149,7 @@ build() {
         -DUSE_NCCL=ON
         -DBUILD_WITH_SHARED_NCCL=ON
         -DBUILD_WITH_CUDA_CUB=ON # Required for CUDA > 11.4
-        # According to $srcdir/dmoe/rmm_plugin we need a RMM package first to
+        # According to $srcdir/demo/rmm_plugin we need a RMM package first to
         # build RMM plugin. There's no package that provides RMM now in offical
         # repo or in AUR.
         #-DPLUGIN_RMM=OFF # Default is OFF
