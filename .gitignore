@@ -18,4 +18,5 @@ PKGBUILD-namcap.log
 *-package_*.log
 *-package.log
 *-prepare.log
+*-pkgver.log
 *.pkg.tar*-namcap.log
