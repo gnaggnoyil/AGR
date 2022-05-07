@@ -1,0 +1,36 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 46aa280..30c5024 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -112,6 +112,7 @@ else()
+ endif()
+ # Azure configurations
+ if(USE_AZURE)
++  target_link_libraries(dmlc PRIVATE azurestorage)
+   target_compile_definitions(dmlc PRIVATE -DDMLC_USE_AZURE=1)
+ else()
+   target_compile_definitions(dmlc PRIVATE -DDMLC_USE_AZURE=0)
+diff --git a/src/io/azure_filesys.cc b/src/io/azure_filesys.cc
+index 564f017..bed90d5 100644
+--- a/src/io/azure_filesys.cc
++++ b/src/io/azure_filesys.cc
+@@ -5,7 +5,6 @@
+  * \author Mu Li
+  */
+ #include "./azure_filesys.h"
+-#include "stdafx.h"
+ 
+ #include "was/storage_account.h"
+ #include "was/blob.h"
+@@ -31,9 +30,9 @@ std::vector<std::string> split(std::string str, char delimiter) {
+ AzureFileSystem::AzureFileSystem() {
+   const char *name = getenv("AZURE_STORAGE_ACCOUNT");
+   const char* key = getenv("AZURE_STORAGE_ACCESS_KEY");
+-  CHECK_NE(name, NULL)
++  CHECK_NE(name, static_cast<void *>(0))
+       << "Need to set enviroment variable AZURE_STORAGE_ACCOUNT to use Azure";
+-  CHECK_NE(key, NULL)
++  CHECK_NE(key, static_cast<void *>(0))
+       << "Need to set enviroment variable AZURE_STORAGE_ACCESS_KEY to use Azure";
+   azure_account_ = name;
+   azure_key_ = key;

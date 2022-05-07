@@ -1,0 +1,23 @@
+diff --git a/plugin/CMakeLists.txt b/plugin/CMakeLists.txt
+index 97d1af19..61860df4 100644
+--- a/plugin/CMakeLists.txt
++++ b/plugin/CMakeLists.txt
+@@ -3,15 +3,10 @@ if (PLUGIN_DENSE_PARSER)
+ endif (PLUGIN_DENSE_PARSER)
+ 
+ if (PLUGIN_RMM)
+-  find_path(RMM_INCLUDE "rmm" HINTS "$ENV{RMM_ROOT}/include")
+-  if (NOT RMM_INCLUDE)
+-    message(FATAL_ERROR "Could not locate RMM library")
+-  endif ()
++  find_package(rmm CONFIG REQUIRED)
+ 
+-  message(STATUS "RMM: RMM_LIBRARY set to ${RMM_LIBRARY}")
+-  message(STATUS "RMM: RMM_INCLUDE set to ${RMM_INCLUDE}")
+-
+-  target_include_directories(objxgboost PUBLIC ${RMM_INCLUDE})
++  target_link_libraries(objxgboost PUBLIC rmm::rmm)
++  target_compile_features(objxgboost PUBLIC cuda_std_17)
+   target_compile_definitions(objxgboost PUBLIC -DXGBOOST_USE_RMM=1)
+ endif (PLUGIN_RMM)
+ 

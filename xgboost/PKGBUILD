@@ -21,7 +21,7 @@ pkgname=(
     python-xgboost
 )
 pkgver=1.6.0
-pkgrel=1
+pkgrel=2
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('APACHE')
@@ -61,8 +61,7 @@ _optdepends_python_xgboost=(
     'python-scikit-learn'
     'python-dask'
     'python-distributed'
-    # There's no package that provides python-datatable in offical repo or AUR
-    #'python-datatable'
+    'python-datatable'
     'python-graphviz'
     'python-matplotlib'
 )
@@ -83,14 +82,18 @@ source=(
     'git+https://github.com/NVlabs/cub'
     'git+https://github.com/rapidsai/gputreeshap.git'
     '0001-python_no_libs.patch'
+    '0002-fix_linking_rmm.patch'
     'dmlc_core-0001-disable_hdfs_static.patch'
+    'dmlc_core-0002-fix_azure_storage_build.patch'
 )
 sha256sums=('SKIP'
             'SKIP'
             'SKIP'
             'SKIP'
             'a1877f1219f65a6a725afe317cb59b3f65324d26b4754b90dac7c0f4295b660b'
-            'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866')
+            'abc79b879e3789f69ae908d9681b621c174d27d0c991c2ff0a772967ec5903c4'
+            'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866'
+            '3071ec8ba86670d19457cac2766b8a69e59fea8069e1f3a562cd8837f4be9098')
 
 prepare() {
     cd "${srcdir}/${pkgbase}"
@@ -101,8 +104,10 @@ prepare() {
     git submodule update
 
     patch -i "${srcdir}/0001-python_no_libs.patch" -p1
+    patch -i "${srcdir}/0002-fix_linking_rmm.patch" -p1
     cd "${srcdir}/${pkgbase}/dmlc-core"
     patch -i "${srcdir}/dmlc_core-0001-disable_hdfs_static.patch" -p1
+    patch -i "${srcdir}/dmlc_core-0002-fix_azure_storage_build.patch" -p1
 
     # The `RUNTIME_OUTPUT_DIRECTORY` and `LIBRARY_OUTPUT_DIRECTORY` is set
     # in the ${srcdir}. So we have to use two src directories to build xgboost
@@ -131,8 +136,7 @@ build() {
         # Required since aur/hadoop does not guarantee that a libhdfs.a exists.
         -DDMLC_HDFS_SHARED=ON
         -DUSE_S3=ON
-        # There's no azure-storage-cpp package in offical repo or in AUR.
-        #-DUSE_AZURE=OFF # Default is OFF
+        -DUSE_AZURE=ON # Default is OFF
     )
 
     _cuda_env=(
@@ -149,10 +153,8 @@ build() {
         -DUSE_NCCL=ON
         -DBUILD_WITH_SHARED_NCCL=ON
         -DBUILD_WITH_CUDA_CUB=ON # Required for CUDA > 11.4
-        # According to $srcdir/demo/rmm_plugin we need a RMM package first to
-        # build RMM plugin. There's no package that provides RMM now in offical
-        # repo or in AUR.
-        #-DPLUGIN_RMM=OFF # Default is OFF
+        -DPLUGIN_RMM=ON # Default is OFF
+        -DThrust_ROOT=/opt/thrust1.15
     )
 
     # For aur/hadoop, adding `--as-needed` in LDFLAGS will cause libxgboost.so
