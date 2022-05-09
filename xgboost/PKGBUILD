@@ -21,7 +21,7 @@ pkgname=(
     python-xgboost
 )
 pkgver=1.6.0
-pkgrel=2
+pkgrel=3
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('APACHE')
@@ -44,37 +44,52 @@ _dependsbase=(
     'jdk-openjdk'
     # Required for USE_S3
     'curl'
-    'openssl' # May build a new package with openssl-1.0
+    # openssl is already a dependency of cpprestsdk, which is a dependency of
+    # azure-storage-cpp
+    #'openssl' # May build a new package with openssl-1.0
+    'azure-storage-cpp'
 )
 _depends_xgboost_cuda=(
     'cuda'
     'nccl'
+    'fmt'
+)
+_makedepends_xgboost_cuda=(
+    # Unless we are using thrust1.15 in a way that actually links libaray files
+    # (which is hardly possible AFAIK), we don't need to put any possible
+    # package as dependency of xgboost-cuda as the use of thrust1.15 in rmm
+    # doesn't seems to bring any library file dependencies.
+    # As of v22.04 the only library file dependency rmm needs are cudart, libdl
+    # and spdlog. Cudart and libdl are already direct or indirect dependencies
+    # of xgboost-cuda. Spdlog brings libfmt.so as a dependency
+    'rapids-memory-manager'
 )
 _depends_python_xgboost=(
     'python>=3.7'
     'python-numpy'
     'python-scipy'
 )
-# TODO: find a way to add a desc on it
+# TODO: check if some optdepends are needed as makedepends too
+# Some of them are already needed for testing python package.
 _optdepends_python_xgboost=(
-    'python-pandas'
-    'python-scikit-learn'
-    'python-dask'
-    'python-distributed'
-    'python-datatable'
-    'python-graphviz'
-    'python-matplotlib'
+    'python-pandas: for pandas and dask support'
+    'python-scikit-learn: for scikit-learn support'
+    'python-dask: for dask support'
+    'python-distributed: for dask support'
+    'python-datatable: for datatable support'
+    'python-graphviz: for plotting support'
+    'python-matplotlib: for plotting support'
 )
 makedepends=(
     'cmake'
     'git'
     'python-setuptools'
     
-    ${_dependsbase[@]}
-    ${_depends_xgboost_cuda[@]}
+    "${_dependsbase[@]}"
+    "${_depends_xgboost_cuda[@]}"
+    "${_makedepends_xgboost_cuda[@]}"
     
-    ${_depends_python_xgboost[@]}
-    ${_optdepends_python_xgboost[@]}
+    "${_depends_python_xgboost[@]}"
 )
 source=(
     "git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
@@ -183,7 +198,7 @@ package_xgboost() {
     pkgdesc='An optimized distributed gradient boosting library designed to be highly efficient, flexible and portable'
     provides=('xgboost' 'dmlc-core')
     conflicts=('xgboost-cuda' 'xgboost-git')
-    depends+=(${_dependsbase[@]})
+    depends+=("${_dependsbase[@]}")
 
     cd "${srcdir}/${pkgbase}/build"
     DESTDIR=${pkgdir} make install
@@ -195,7 +210,7 @@ package_xgboost-cuda() {
     pkgdesc='An optimized distributed gradient boosting library designed to be highly efficient, flexible and portable (with CUDA)'
     provides=('xgboost' 'dmlc-core')
     conflicts=('xgboost' 'xgboost-git')
-    depends+=(${_dependsbase[@]} ${_depends_xgboost_cuda[@]})
+    depends+=("${_dependsbase[@]}" "${_depends_xgboost_cuda[@]}")
 
     cd "${srcdir}/${pkgbase}-cuda/build"
     DESTDIR=${pkgdir} make install
@@ -205,8 +220,9 @@ package_xgboost-cuda() {
 package_python-xgboost() {
     _pkgname=python-${pkgbase}
     pkgdesc='XGBoost Python 3 wrapper'
-    depends+=('xgboost' ${_depends_python_xgboost[@]})
-    optdepends+=(${_optdepends_python_xgboost[@]})
+    depends+=('xgboost' "${_depends_python_xgboost[@]}")
+    # Double quotes prevent field expansion on bash
+    optdepends+=("${_optdepends_python_xgboost[@]}")
     conflicts=('python-xgboost-git')
 
     cd "${srcdir}/${pkgbase}/python-package"
