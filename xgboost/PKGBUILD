@@ -1,6 +1,18 @@
 # Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
 # Contributor: Dmitry Popov <ixaphire@gmail.com>
 
+# Built with:
+# ```
+# extra-x86_64-build -- \
+#   -I ~/workspace/AGR/thrust-rapidsai/thrust-rapidsai-1.15.0-1-x86_64.pkg.tar.zst \
+#   -I ~/workspace/AGR/rapids-memory-manager/rapids-memory-manager-22.08.00-1-x86_64.pkg.tar.zst \
+#   -I ~/jdk-openjdk-18.0.2.1.u0-1-x86_64.pkg.tar.zst \
+#   -I ~/jdk11-openjdk-11.0.16.1.u1-2-x86_64.pkg.tar.zst \
+#   -I ~/.cache/yay/cpprestsdk/cpprestsdk-2.10.18-2-x86_64.pkg.tar.zst \
+#   -I ~/workspace/AGR/azure-storage-cpp/azure-storage-cpp-7.5.0-3-x86_64.pkg.tar.zst \
+#   -I ~/workspace/AGR/hadoop-xgboost/hadoop-xgboost-3.3.4-1-x86_64.pkg.tar.zst
+# ```
+
 pkgbase=xgboost
 # `libxgboost.so` itself is just a normal C++ library and the python wrapper
 # directly loads that library and calls its C++ code inside it.
@@ -20,13 +32,11 @@ pkgname=(
     xgboost-cuda
     python-xgboost
 )
-pkgver=1.6.0
-pkgrel=3
+pkgver=1.6.2
+pkgrel=1
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('APACHE')
-# We have to use git repo here since github release archives does not contain
-# needed submodules nor even their info such as commit id
 _dependsbase=(
     # Required for USE_HDFS
     # When running extra-x86_64-build or makechrootpkg, a specific package that
@@ -34,7 +44,7 @@ _dependsbase=(
     # pacman will keep asking to choose a provider and receiving "y" in return
     # E.g. extra-x86_64-build -- -I ./jdk-openjdk-17.0.3.u3-1-x86_64.pkg.tar.zst -I ~/hadoop-3.3.1-1-x86_64.pkg.tar.gz
     # Related commit: devtools#b7893a2
-    'hadoop'
+    'hadoop-xgboost'
     # Hadoop itself does not tie to specified jdk-openjdk version and the
     # libjvm.so library that dmlc-core links is just used to satisfy the need
     # of libhdfs.so. However, as a package that explicitly depends on jvm
@@ -55,11 +65,11 @@ _depends_xgboost_cuda=(
     'fmt'
 )
 _makedepends_xgboost_cuda=(
-    # Unless we are using thrust1.15 in a way that actually links libaray files
+    # Unless we are using thrust-rapidsai in a way that actually links libaray files
     # (which is hardly possible AFAIK), we don't need to put any possible
     # package as dependency of xgboost-cuda as the use of thrust1.15 in rmm
     # doesn't seems to bring any library file dependencies.
-    # As of v22.04 the only library file dependency rmm needs are cudart, libdl
+    # As of v22.08 the only library file dependency rmm needs are cudart, libdl
     # and spdlog. Cudart and libdl are already direct or indirect dependencies
     # of xgboost-cuda. Spdlog brings libfmt.so as a dependency
     'rapids-memory-manager'
@@ -91,49 +101,64 @@ makedepends=(
     
     "${_depends_python_xgboost[@]}"
 )
+_dmlc_core_tag='97e9afa320731763c12e4e80182725465a572600'
+_cub_tag='af39ee264f4627608072bf54730bf3a862e56875'
+_gputreeshap_tag='c78fe621e429117cbca45e7b23eb5c3b6280fa3a'
 source=(
-    "git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
-    'git+https://github.com/dmlc/dmlc-core'
-    'git+https://github.com/NVlabs/cub'
-    'git+https://github.com/rapidsai/gputreeshap.git'
+    #"git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
+    #'git+https://github.com/dmlc/dmlc-core'
+    #'git+https://github.com/NVlabs/cub'
+    #'git+https://github.com/rapidsai/gputreeshap.git'
+    "${pkgbase}-${pkgver}.tar.gz::https://github.com/dmlc/xgboost/archive/v${pkgver}.tar.gz"
+    "dmlc-core-${_dmlc_core_tag}.tar.gz::https://github.com/dmlc/dmlc-core/archive/${_dmlc_core_tag}.tar.gz"
+    "cub-${_cub_tag}.tar.gz::https://github.com/NVlabs/cub/archive/${_cub_tag}.tar.gz"
+    "gputreeshap-${_gputreeshap_tag}.tar.gz::https://github.com/rapidsai/gputreeshap/archive/${_gputreeshap_tag}.tar.gz"
     '0001-python_no_libs.patch'
-    '0002-fix_linking_rmm.patch'
+    #'0002-fix_linking_rmm.patch'
     'dmlc_core-0001-disable_hdfs_static.patch'
     'dmlc_core-0002-fix_azure_storage_build.patch'
 )
-sha256sums=('SKIP'
-            'SKIP'
-            'SKIP'
-            'SKIP'
+sha256sums=('0fbe4815d1e9407952ba485794c02b1bc9ead63bf7c541441aec47a671d7303f'
+            'ac4a5dfbca6d37c8c6e8227f49c50a9308c9597c6e9cf5584e0a0ba08e7151bc'
+            'cc626e006aa6ce961ddd8e82d97d5fc358c585fb27d3f8f1759efe9467f851b4'
+            'b80559f377e997e58bc22e65cc5ef74008b5a165f787f01117e6fe8bea0af79e'
             'a1877f1219f65a6a725afe317cb59b3f65324d26b4754b90dac7c0f4295b660b'
-            'abc79b879e3789f69ae908d9681b621c174d27d0c991c2ff0a772967ec5903c4'
             'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866'
             '3071ec8ba86670d19457cac2766b8a69e59fea8069e1f3a562cd8837f4be9098')
 
 prepare() {
-    cd "${srcdir}/${pkgbase}"
-    git submodule init
-    git config submodule.dmlc-core.url "${srcdir}/dmlc-core"
-    git config submodule.cub.url "${srcdir}/cub"
-    git config submodule.gputreeshap.url "${srcdir}/gputreeshap"
-    git submodule update
+    #cd "${srcdir}/${pkgbase}"
+    #git submodule init
+    #git config submodule.dmlc-core.url "${srcdir}/dmlc-core"
+    #git config submodule.cub.url "${srcdir}/cub"
+    #git config submodule.gputreeshap.url "${srcdir}/gputreeshap"
+    #git submodule update
 
+    cd "${srcdir}/${pkgbase}-${pkgver}"
+    rm -d dmlc-core
+    cp -r "${srcdir}/dmlc-core-${_dmlc_core_tag}" "${srcdir}/${pkgbase}-${pkgver}/dmlc-core"
+    rm -d cub
+    cp -r "${srcdir}/cub-${_cub_tag}" "${srcdir}/${pkgbase}-${pkgver}/cub"
+    rm -d gputreeshap
+    cp -r "${srcdir}/gputreeshap-${_gputreeshap_tag}" "${srcdir}/${pkgbase}-${pkgver}/gputreeshap"
+
+    cd "${srcdir}/${pkgbase}-${pkgver}"
     patch -i "${srcdir}/0001-python_no_libs.patch" -p1
-    patch -i "${srcdir}/0002-fix_linking_rmm.patch" -p1
-    cd "${srcdir}/${pkgbase}/dmlc-core"
+    #patch -i "${srcdir}/0002-fix_linking_rmm.patch" -p1
+    cd "${srcdir}/${pkgbase}-${pkgver}/dmlc-core"
     patch -i "${srcdir}/dmlc_core-0001-disable_hdfs_static.patch" -p1
     patch -i "${srcdir}/dmlc_core-0002-fix_azure_storage_build.patch" -p1
 
     # The `RUNTIME_OUTPUT_DIRECTORY` and `LIBRARY_OUTPUT_DIRECTORY` is set
     # in the ${srcdir}. So we have to use two src directories to build xgboost
     # and xgboost-cuda
-    mkdir -p "${srcdir}/${pkgbase}/build"
-    cp -r "${srcdir}/${pkgbase}" "${srcdir}/${pkgbase}-cuda"
+    mkdir -p "${srcdir}/${pkgbase}-${pkgver}/build"
+    cp -r "${srcdir}/${pkgbase}-${pkgver}" "${srcdir}/${pkgbase}-${pkgver}-cuda"
 }
 
 build() {
     _common_env=(
-        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.2
+        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.4
         HADOOP_WORKERS=/etc/hadoop/workers
         JAVA_HOME=/usr/lib/jvm/default
     )
@@ -154,6 +179,14 @@ build() {
         -DUSE_AZURE=ON # Default is OFF
     )
 
+    # TODO: find out the difference of setting `-DBUILD_C_DOCS=ON`` in cmake and
+    # running `make` in ./doc directory.
+    #_non_cuda_env=(
+    #    # XGBoost doesn't have any public cuda api so it's ok to build doc only
+    #    # with non cuda build
+    #    -DBUILD_C_DOCS=ON
+    #)
+
     _cuda_env=(
         CC=/opt/cuda/bin/gcc
         CXX=/opt/cuda/bin/g++
@@ -167,28 +200,28 @@ build() {
         -DUSE_CUDA=ON
         -DUSE_NCCL=ON
         -DBUILD_WITH_SHARED_NCCL=ON
-        -DBUILD_WITH_CUDA_CUB=ON # Required for CUDA > 11.4
+        -DBUILD_WITH_CUDA_CUB=ON # Required for CUDA >= 11.4
         -DPLUGIN_RMM=ON # Default is OFF
-        -DThrust_ROOT=/opt/thrust1.15
+        -DThrust_ROOT=/opt/thrust-rapidsai
     )
 
     # For aur/hadoop, adding `--as-needed` in LDFLAGS will cause libxgboost.so
     # unable to find libjvm.so that's been linked to libdmlc.so when linking
     # libxgboost.so itself. Not sure the root cause of it.
-    LDFLAGS=${LDFLAGS/,--as-needed}
-    LDFLAGS=${LDFLAGS/ --as-needed}
-    if [ "x$LDFLAGS" = "x-Wl" ]; then
-        LDFLAGS=''
-    fi
+    #LDFLAGS=${LDFLAGS/,--as-needed}
+    #LDFLAGS=${LDFLAGS/ --as-needed}
+    #if [ "x$LDFLAGS" = "x-Wl" ]; then
+    #    LDFLAGS=''
+    #fi
 
     echo "Building ${pkgbase}"
-    cd "${srcdir}/${pkgbase}/build"
+    cd "${srcdir}/${pkgbase}-${pkgver}/build"
     env ${_common_env[@]} cmake ${_common_args[@]} ..
     # MAKEFLAGS will automatically be read by GNU make
     cmake --build . --config Release
 
     echo "Building ${pkgbase}-cuda"
-    cd "${srcdir}/${pkgbase}-cuda/build"
+    cd "${srcdir}/${pkgbase}-${pkgver}-cuda/build"
     env ${_common_env[@]} ${_cuda_env[@]} cmake ${_common_args[@]} ${_cuda_args[@]} ..
     cmake --build . --config Release
 }
@@ -200,9 +233,9 @@ package_xgboost() {
     conflicts=('xgboost-cuda' 'xgboost-git')
     depends+=("${_dependsbase[@]}")
 
-    cd "${srcdir}/${pkgbase}/build"
+    cd "${srcdir}/${pkgbase}-${pkgver}/build"
     DESTDIR=${pkgdir} make install
-    install -Dm644 "${srcdir}/${pkgbase}/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
+    install -Dm644 "${srcdir}/${pkgbase}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
 }
 
 package_xgboost-cuda() {
@@ -212,9 +245,9 @@ package_xgboost-cuda() {
     conflicts=('xgboost' 'xgboost-git')
     depends+=("${_dependsbase[@]}" "${_depends_xgboost_cuda[@]}")
 
-    cd "${srcdir}/${pkgbase}-cuda/build"
+    cd "${srcdir}/${pkgbase}-${pkgver}-cuda/build"
     DESTDIR=${pkgdir} make install
-    install -Dm644 "${srcdir}/${pkgbase}-cuda/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
+    install -Dm644 "${srcdir}/${pkgbase}-${pkgver}-cuda/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
 }
 
 package_python-xgboost() {
@@ -225,7 +258,7 @@ package_python-xgboost() {
     optdepends+=("${_optdepends_python_xgboost[@]}")
     conflicts=('python-xgboost-git')
 
-    cd "${srcdir}/${pkgbase}/python-package"
+    cd "${srcdir}/${pkgbase}-${pkgver}/python-package"
     python setup.py install --root="${pkgdir}" --optimize=1 --use-system-libxgboost
-    install -Dm644 "${srcdir}/${pkgbase}/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
+    install -Dm644 "${srcdir}/${pkgbase}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
 }
