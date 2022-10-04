@@ -1,18 +1,20 @@
 # Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
 
 _pkgbasename=rmm
-_pkgbasever=22.04
+_pkgbasever=22.08
 pkgname=rapids-memory-manager
 pkgdesc='RAPIDS Memory Manager'
-pkgver=${_pkgbasever}.01
+pkgver=${_pkgbasever}.00
 pkgrel=1
 arch=('x86_64')
 url="https://github.com/rapidsai/${_pkgbasename}"
 license=('APACHE')
 depends=(
-    'cuda'
+    'cuda' # For cudart, cuda itself not needed.
+    # See rapids-cmake/rapids-cmake/cpm/versions.json
     'spdlog>=1.8.5'
-    'thrust1.15'
+    # rapids-cmake/rapids-cmake/cpm/thrust.cmake specifies `EXACT` for find_package(thrust)
+    'thrust-rapidsai=1.15.0'
 )
 # It's difficult to fit needs of the python binding so we'll not build this for now
 #_depends_python_rapids_rmm=(
@@ -32,7 +34,7 @@ depends=(
 #    'ninja'
 #)
 makedepends=('cmake')
-_rapids_cmake_tag='7f24b28e7019e5fd6823fa5c7287d20861482396'
+_rapids_cmake_tag='c73756e12dad31e0094cc81aaa345449cae06eda'
 _cpmver=0.35.0
 source=(
     # RMM source specifies branch-${_pkgbasever} for rapids-cmake. Given that tag/v${_pkgbasever}.00a
@@ -42,18 +44,17 @@ source=(
     "rapids-cmake-${_rapids_cmake_tag}.tar.gz::https://github.com/rapidsai/rapids-cmake/archive/${_rapids_cmake_tag}.tar.gz"
     "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/rapidsai/${_pkgbasename}/archive/v${pkgver}.tar.gz"
     "https://github.com/cpm-cmake/CPM.cmake/releases/download/v${_cpmver}/CPM.cmake"
-    "rapids-cmake-0001-correctly-find-thrust-version.patch"
+    #"rapids-cmake-0001-correctly-find-thrust-version.patch"
     "${_pkgbasename}-0001-avoid-uncessary-download.patch"
 )
-sha256sums=('d85abc6520ad6615e852fc2103d40f401986747c1fed74f7327a924cfc1c943a'
-            '2989ecac7d29f1104f3bd8bf328f3345398faaf2164eea86a755ff204e4214fb'
+sha256sums=('fc31827e27b60fe8a7210359efde6c2bb0a5caf2bcfa88e8bc861753e84059ea'
+            '8588c6b5633b2fbdd834abbba0d1ea491e26d4f183b90c907615c0a38c2f9dc1'
             '6c3015e0359c99994f65d248c8541a9cb02e03419d46961ce7d4e38b50d87635'
-            '6bdf0bb8272b798f1ebe1e5d1ca7bae34e374a8ba557dc26c7a88e5b9fbfb635'
-            '05f39fba0a7185673691debb1656e1a9618351867fc4d79c148fd0e0f46267f9')
+            '9a1435f067e22f8a8bfa5a88d11831453de72816e805c59c899471ddf57c55e1')
 
 prepare() {
-    cd "${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
-    patch -i "${srcdir}/rapids-cmake-0001-correctly-find-thrust-version.patch" -p1
+    #cd "${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
+    #patch -i "${srcdir}/rapids-cmake-0001-correctly-find-thrust-version.patch" -p1
 
     cd "${srcdir}/${_pkgbasename}-${pkgver}"
     patch -i "${srcdir}/${_pkgbasename}-0001-avoid-uncessary-download.patch" -p1
@@ -71,7 +72,7 @@ build() {
         -DCMAKE_BUILD_TYPE=Release
         -DCMAKE_INSTALL_PREFIX=/usr
 
-        -DThrust_ROOT=/opt/thrust1.15
+        -DThrust_ROOT=/opt/thrust-rapidsai
         -DFETCHCONTENT_SOURCE_DIR_RAPIDS-CMAKE="${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
         -DCPM_LOCAL_PACKAGES_ONLY=ON
 

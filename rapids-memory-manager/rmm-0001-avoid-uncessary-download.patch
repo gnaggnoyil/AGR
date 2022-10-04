@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 8f6f0c1..3e137eb 100644
+index 23cde1de..fa48f9f2 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -14,8 +14,10 @@
@@ -7,7 +7,7 @@ index 8f6f0c1..3e137eb 100644
  cmake_minimum_required(VERSION 3.20.1 FATAL_ERROR)
  
 +if(NOT (EXISTS ${CMAKE_BINARY_DIR}/RAPIDS.cmake))
- file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-22.04/RAPIDS.cmake
+ file(DOWNLOAD https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-22.08/RAPIDS.cmake
       ${CMAKE_BINARY_DIR}/RAPIDS.cmake)
 +endif()
  include(${CMAKE_BINARY_DIR}/RAPIDS.cmake)
