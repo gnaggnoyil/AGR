@@ -1,0 +1,23 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
+pkgname=wsl_issue_8219
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="Fix microsoft/WSL/issues/8219"
+arch=("x86_64")
+license=("Unlicense")
+depends=(
+    'python-pyelftools'
+)
+source=(
+    "run_patchelf.py"
+    "patchelf.hook"
+)
+sha256sums=('76b347df33f5698e9d180f9125c178759d6f1f1b3ea2691b44d2473e6c0887ff'
+            'fca40f88ca1e38ef1bb63894438855671d6aefb7101f0bbee088acf463633ec3')
+
+package() {
+    cd ${srcdir}
+    install -Dm644 run_patchelf.py "${pkgdir}/usr/lib/${pkgname}/run_patchelf.py"
+    install -Dm644 patchelf.hook "${pkgdir}/usr/share/libalpm/hooks/${pkgname}-patchelf.hook"
+}
