@@ -1,5 +1,4 @@
 import io
-from lib2to3.pytree import Base
 import pathlib
 import logging
 import typing
@@ -22,6 +21,12 @@ _T_co = typing.TypeVar("_T_co", covariant=True)
 
 _logger: logging.Logger = logging.getLogger(__name__)
 _logger.addHandler(logging.StreamHandler(stream=sys.stderr))
+
+
+class variables_map(dict[int, typing.Any]):
+    
+    def __init__(self) -> None:
+        dict.__init__(self)
 
 
 @typing.runtime_checkable
@@ -159,7 +164,7 @@ def _patch(input_path: pathlib.Path) -> int:
     
     with contextlib.ExitStack() as estack:
         _logger.info(f"Start patching file {input_path}...")
-        estack.callback(lambda : _logger.info(f"Finish patching file ${input_path}"))
+        estack.callback(lambda : _logger.info(f"Finish patching file {input_path}"))
 
         wrap_logger: wrapped_logger = wrapped_logger(_logger, "Patching file %s: {msg}" % (input_path, ))
 
@@ -242,11 +247,14 @@ def _run_patch_works(input_paths: list[pathlib.Path], max_workers: typing.Option
 
 def parse_args(arg_list: list[str]) -> argparse.Namespace:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Patching WSL1 ELF file settings")
-    parser.add_argument("--file", type=pathlib.Path, required=True, action="append", help="The ELF file to patch. Can be specified multiple times")
+    parser.add_argument("--file", type=pathlib.Path, action="append", help="The ELF file to patch. Can be specified multiple times")
+    file_lists_file_help: str = "Path of text file containing the file lists to patch. Will be appended to `--file` options. `-` for stdin"
+    parser.add_argument("--file-lists-file", type=argparse.FileType("r"), action="append", help=file_lists_file_help)
     parser.add_argument("--max-workers", type=int, action="store", help="Maximum number of workers to do the patch job concurrently. Default to $(nproc), or 1 if only one file to patch.")
     parser.add_argument("--loglevel", type=_to_loglevel, action="store", help="Specifies the log level for the program logger.")
 
     args: argparse.Namespace = parser.parse_args(arg_list)
+    assert (args.file is not None) or (args.file_lists_file is not None), "At least one of `--file` and `--file-lists-file` flags must exist."
     return args
 
 
@@ -260,11 +268,24 @@ def main(argv: list[str]) -> int:
     if args.max_workers is not None:
         max_workers = typing.cast(int, args.max_workers)
     
-    files: list[pathlib.Path] = typing.cast(list[pathlib.Path], args.file)
+    files: list[pathlib.Path] = []
+    if args.file is not None:
+        files.extend(typing.cast(list[pathlib.Path], args.file))
+    if args.file_lists_file is not None:
+        with contextlib.ExitStack() as stack:
+            file_lists_files: list[io.TextIOBase] = [
+                stack.enter_context(current_file_lists_file) for current_file_lists_file in typing.cast(list[io.TextIOBase], args.file_lists_file)
+            ]
+            for file_lists_file in file_lists_files:
+                for current_line in file_lists_file:
+                    # TODO: check if file path could end with "\n"
+                    current_line = current_line.removesuffix("\n")
+                    files.append(pathlib.Path(current_line))
+    
     return_status = _run_patch_works(files, max_workers=max_workers)
     return return_status
 
 
 if __name__ == "__main__":
-    ret = main(sys.argv)
+    ret: int = main(sys.argv)
     sys.exit(ret)

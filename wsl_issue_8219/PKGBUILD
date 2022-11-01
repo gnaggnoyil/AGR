@@ -1,10 +1,11 @@
 # Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
 
 pkgname=wsl_issue_8219
-pkgver=0.0.1
+pkgver=0.0.2
 pkgrel=1
 pkgdesc="Fix microsoft/WSL/issues/8219"
 arch=("x86_64")
+url='https://github.com/gnaggnoyil/AGR'
 license=("Unlicense")
 depends=(
     'python-pyelftools'
@@ -13,8 +14,8 @@ source=(
     "run_patchelf.py"
     "patchelf.hook"
 )
-sha256sums=('76b347df33f5698e9d180f9125c178759d6f1f1b3ea2691b44d2473e6c0887ff'
-            'fca40f88ca1e38ef1bb63894438855671d6aefb7101f0bbee088acf463633ec3')
+sha256sums=('c8c6512d3e9a5a55389f8a2473c804a327bdb81c21df698f3be64d99b7070ecc'
+            '2ff1c76d7c2163e8ffb19acf19a7db2619b3f429b4b20e7c3e79826812a47361')
 
 package() {
     cd ${srcdir}

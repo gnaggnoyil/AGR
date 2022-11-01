@@ -8,4 +8,5 @@ Target = usr/bin/node
 Description = Patching targeted ELF files to workaround WSL issue 8219...
 When = PostTransaction
 Depends = python-pyelftools
-Exec = /usr/bin/python /usr/lib/wsl_issue_8219/run_patchelf.py --file /usr/bin/node --loglevel WARNING
+Exec = /usr/bin/python /usr/lib/wsl_issue_8219/run_patchelf.py --file-lists-file - --loglevel INFO
+NeedsTargets
