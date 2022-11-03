@@ -27,12 +27,15 @@ pkgbase=xgboost
 # package will then just be a python wrapper for the `xgboost`/`xgboost-cuda`
 # library, and we don't need to spilt the wrapper package for `xgboost` and
 # `xgboost-cuda`
+# Note however, 0001-python_no_libs.patch or something similar is needed to
+# completely silence the assertion check in order to really ensure that
+# setup.py simply ignores the library file.
 pkgname=(
     xgboost
     xgboost-cuda
     python-xgboost
 )
-pkgver=1.6.2
+pkgver=1.7.0
 pkgrel=1
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
@@ -62,20 +65,28 @@ _dependsbase=(
 _depends_xgboost_cuda=(
     'cuda'
     'nccl'
-    'fmt'
+    # CMake will link libfmt.so for some object files, but if `--as-needed` is
+    # in link flags this library linking will be removed during link time.
+    #'fmt'
+    'grpc' # Required for `PLUGIN_FEDERATED`
+    # protobuf is already a dependency of grpc
+    # NVFlare is not required when using xgboost built with PLUGIN_FEDERATED,
+    # but the xgboost doc describes how to cooperate with NVFlare if built with
+    # PLUGIN_FEDERATED. There's not NVFlare package even in AUR, so should we
+    # create a package for it?
 )
 _makedepends_xgboost_cuda=(
     # Unless we are using thrust-rapidsai in a way that actually links libaray files
     # (which is hardly possible AFAIK), we don't need to put any possible
     # package as dependency of xgboost-cuda as the use of thrust1.15 in rmm
     # doesn't seems to bring any library file dependencies.
-    # As of v22.08 the only library file dependency rmm needs are cudart, libdl
+    # As of v22.10 the only library file dependency rmm needs are cudart, libdl
     # and spdlog. Cudart and libdl are already direct or indirect dependencies
     # of xgboost-cuda. Spdlog brings libfmt.so as a dependency
     'rapids-memory-manager'
 )
 _depends_python_xgboost=(
-    'python>=3.7'
+    'python>=3.8'
     'python-numpy'
     'python-scipy'
 )
@@ -83,16 +94,19 @@ _depends_python_xgboost=(
 # Some of them are already needed for testing python package.
 _optdepends_python_xgboost=(
     'python-pandas: for pandas and dask support'
-    'python-scikit-learn: for scikit-learn support'
+    'python-scikit-learn: for scikit-learn and pyspark support'
     'python-dask: for dask support'
     'python-distributed: for dask support'
     'python-datatable: for datatable support'
     'python-graphviz: for plotting support'
     'python-matplotlib: for plotting support'
+    # Note: as of date 2022-11-03 `aur/python-pyspark` is missing its required
+    # dependency `python-py4j`
+    'python-pyspark: for pyspark support'
+    'python-cloudpickle: for pyspark support'
 )
 makedepends=(
     'cmake'
-    'git'
     'python-setuptools'
     
     "${_dependsbase[@]}"
@@ -101,9 +115,9 @@ makedepends=(
     
     "${_depends_python_xgboost[@]}"
 )
-_dmlc_core_tag='97e9afa320731763c12e4e80182725465a572600'
+_dmlc_core_tag='dfd9365264a060a5096734b7d892e1858b6d2722'
 _cub_tag='af39ee264f4627608072bf54730bf3a862e56875'
-_gputreeshap_tag='c78fe621e429117cbca45e7b23eb5c3b6280fa3a'
+_gputreeshap_tag='acb5be3c17e9adae34ac0b176da6ea8e197cb17e'
 source=(
     #"git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
     #'git+https://github.com/dmlc/dmlc-core'
@@ -113,16 +127,17 @@ source=(
     "dmlc-core-${_dmlc_core_tag}.tar.gz::https://github.com/dmlc/dmlc-core/archive/${_dmlc_core_tag}.tar.gz"
     "cub-${_cub_tag}.tar.gz::https://github.com/NVlabs/cub/archive/${_cub_tag}.tar.gz"
     "gputreeshap-${_gputreeshap_tag}.tar.gz::https://github.com/rapidsai/gputreeshap/archive/${_gputreeshap_tag}.tar.gz"
+    # Generated with `git diff --ignore-submodules`
     '0001-python_no_libs.patch'
     #'0002-fix_linking_rmm.patch'
     'dmlc_core-0001-disable_hdfs_static.patch'
     'dmlc_core-0002-fix_azure_storage_build.patch'
 )
-sha256sums=('0fbe4815d1e9407952ba485794c02b1bc9ead63bf7c541441aec47a671d7303f'
-            'ac4a5dfbca6d37c8c6e8227f49c50a9308c9597c6e9cf5584e0a0ba08e7151bc'
+sha256sums=('ab337731a8a089331c64a355283e0f09547c9ff001394d1e33ae3a3445b3f225'
+            'd8c8a9ae75994af6b1e78f3ed5fd8bcb62068dadbc1487ab9ce589ee36a69c95'
             'cc626e006aa6ce961ddd8e82d97d5fc358c585fb27d3f8f1759efe9467f851b4'
-            'b80559f377e997e58bc22e65cc5ef74008b5a165f787f01117e6fe8bea0af79e'
-            'a1877f1219f65a6a725afe317cb59b3f65324d26b4754b90dac7c0f4295b660b'
+            'b40b9032963965f45f6b9902cd98a9c28ee28de761ff9525a98da29f6d5ec01f'
+            'ae7cc490448dd80a70a24ce1bb5db689c8d4ca28d9c4be93fe54082fb7a6fdf6'
             'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866'
             '3071ec8ba86670d19457cac2766b8a69e59fea8069e1f3a562cd8837f4be9098')
 
@@ -186,6 +201,8 @@ build() {
     #    # with non cuda build
     #    -DBUILD_C_DOCS=ON
     #)
+    # TODO: check if we need to build the doc package as well since v1.7.0
+    # greatly improves its doc, especially the C one.
 
     _cuda_env=(
         CC=/opt/cuda/bin/gcc
@@ -202,6 +219,7 @@ build() {
         -DBUILD_WITH_SHARED_NCCL=ON
         -DBUILD_WITH_CUDA_CUB=ON # Required for CUDA >= 11.4
         -DPLUGIN_RMM=ON # Default is OFF
+        -DPLUGIN_FEDERATED=ON # Default is OFF
         -DThrust_ROOT=/opt/thrust-rapidsai
     )
 
