@@ -1,7 +1,7 @@
 # Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
 
 _pkgbasename=rmm
-_pkgbasever=22.08
+_pkgbasever=22.10
 pkgname=rapids-memory-manager
 pkgdesc='RAPIDS Memory Manager'
 pkgver=${_pkgbasever}.00
@@ -14,7 +14,7 @@ depends=(
     # See rapids-cmake/rapids-cmake/cpm/versions.json
     'spdlog>=1.8.5'
     # rapids-cmake/rapids-cmake/cpm/thrust.cmake specifies `EXACT` for find_package(thrust)
-    'thrust-rapidsai=1.15.0'
+    'thrust-rapidsai=1.17.2'
 )
 # It's difficult to fit needs of the python binding so we'll not build this for now
 #_depends_python_rapids_rmm=(
@@ -34,8 +34,9 @@ depends=(
 #    'ninja'
 #)
 makedepends=('cmake')
-_rapids_cmake_tag='c73756e12dad31e0094cc81aaa345449cae06eda'
-_cpmver=0.35.0
+_rapids_cmake_tag='df6ef3c119bdb67d3358b3bd9ed0b4cdfb387d30'
+# This version number is specified in rapids-cmake/cpm/detail/download.cmake
+_cpmver=0.35.6
 source=(
     # RMM source specifies branch-${_pkgbasever} for rapids-cmake. Given that tag/v${_pkgbasever}.00a
     # and branch-${_pkgbasever} are actuall different, we do the following to ensure a reproducible build:
@@ -45,24 +46,23 @@ source=(
     "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/rapidsai/${_pkgbasename}/archive/v${pkgver}.tar.gz"
     "https://github.com/cpm-cmake/CPM.cmake/releases/download/v${_cpmver}/CPM.cmake"
     #"rapids-cmake-0001-correctly-find-thrust-version.patch"
-    "${_pkgbasename}-0001-avoid-uncessary-download.patch"
+    #"${_pkgbasename}-0001-avoid-uncessary-download.patch"
 )
-sha256sums=('fc31827e27b60fe8a7210359efde6c2bb0a5caf2bcfa88e8bc861753e84059ea'
-            '8588c6b5633b2fbdd834abbba0d1ea491e26d4f183b90c907615c0a38c2f9dc1'
-            '6c3015e0359c99994f65d248c8541a9cb02e03419d46961ce7d4e38b50d87635'
-            '9a1435f067e22f8a8bfa5a88d11831453de72816e805c59c899471ddf57c55e1')
+sha256sums=('2259fcd839eceab1066750ad473d6e6ac687a88fb1190dd7fe8ab6567b84379f'
+            '74227115586fbae6b6daf0f55c3c06440768ea398ca330c5cef6c2abb110f270'
+            '6b47e2a94b69c59acda5567401afc67ac53e9a95bf90cfd4f1e9792c4d8ec815')
 
 prepare() {
     #cd "${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
     #patch -i "${srcdir}/rapids-cmake-0001-correctly-find-thrust-version.patch" -p1
 
-    cd "${srcdir}/${_pkgbasename}-${pkgver}"
-    patch -i "${srcdir}/${_pkgbasename}-0001-avoid-uncessary-download.patch" -p1
+    #cd "${srcdir}/${_pkgbasename}-${pkgver}"
+    #patch -i "${srcdir}/${_pkgbasename}-0001-avoid-uncessary-download.patch" -p1
 
     cd "${srcdir}"
     mkdir -p build
     cd build
-    ln -s "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/RAPIDS.cmake" "RAPIDS.cmake"
+    ln -s "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/RAPIDS.cmake" "RMM_RAPIDS.cmake"
     mkdir -p cmake
     ln -s "${srcdir}/CPM.cmake" "cmake/CPM_${_cpmver}.cmake"
 }
