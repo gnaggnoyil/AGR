@@ -4,7 +4,7 @@
 
 _pkgbasename=thrust
 pkgname=${_pkgbasename}-rapidsai
-pkgver=1.15.0
+pkgver=1.17.2
 pkgrel=1
 pkgdesc='A C++ parallel programming library which resembles the C++ Standard Library (version following rapidsai)'
 arch=('x86_64' 'aarch64')
@@ -20,8 +20,8 @@ source=(
     "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/thrust/${_pkgbasename}/archive/${pkgver}.tar.gz"
     "cub-${pkgver}.tar.gz::https://github.com/thrust/cub/archive/${pkgver}.tar.gz"
 )
-sha256sums=('0eeaf5a77cd7cb143f3443bd96b215ae1c4eacf18a712762e6a5c85213f80cc2'
-            '1781ee5eb7f00acfee5bff88e3acfc67378f6b3c24281335e18ae19e1f2ff685')
+sha256sums=('d021e37f5aac30fd1b9737865399feb57db8e601ae2fc0af3cd41784435e9523'
+            '1013a595794548c359f22c07e1f8c620b97e3a577f7e8496d9407f74566a3e2a')
 
 prepare() {
     cd "${srcdir}/${_pkgbasename}-${pkgver}/dependencies"
