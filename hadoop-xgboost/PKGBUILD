@@ -15,7 +15,7 @@ set -u
 _pkgbasename=hadoop
 pkgname=${_pkgbasename}-xgboost
 pkgver=3.3.4
-pkgrel=2
+pkgrel=3
 pkgdesc='An open-source software for reliable, scalable, distributed computing (built for xgboost)'
 arch=('i686' 'x86_64')
 url='https://hadoop.apache.org'
