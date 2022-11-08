@@ -35,7 +35,7 @@ pkgname=(
     xgboost-cuda
     python-xgboost
 )
-pkgver=1.7.0
+pkgver=1.7.1
 pkgrel=1
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
@@ -129,15 +129,16 @@ source=(
     "gputreeshap-${_gputreeshap_tag}.tar.gz::https://github.com/rapidsai/gputreeshap/archive/${_gputreeshap_tag}.tar.gz"
     # Generated with `git diff --ignore-submodules`
     '0001-python_no_libs.patch'
-    #'0002-fix_linking_rmm.patch'
+    '0002-install_federated_proto.patch'
     'dmlc_core-0001-disable_hdfs_static.patch'
     'dmlc_core-0002-fix_azure_storage_build.patch'
 )
-sha256sums=('ab337731a8a089331c64a355283e0f09547c9ff001394d1e33ae3a3445b3f225'
+sha256sums=('f2ae7ed3890950ebf28f63eeb59f4d1c10e997fb765fee40e7a2982befd21ed9'
             'd8c8a9ae75994af6b1e78f3ed5fd8bcb62068dadbc1487ab9ce589ee36a69c95'
             'cc626e006aa6ce961ddd8e82d97d5fc358c585fb27d3f8f1759efe9467f851b4'
             'b40b9032963965f45f6b9902cd98a9c28ee28de761ff9525a98da29f6d5ec01f'
             'ae7cc490448dd80a70a24ce1bb5db689c8d4ca28d9c4be93fe54082fb7a6fdf6'
+            '44833c583eaaeed32abe5cc89b23bc6b3a088e15deabd2f2c1ddd30086d406af'
             'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866'
             '3071ec8ba86670d19457cac2766b8a69e59fea8069e1f3a562cd8837f4be9098')
 
@@ -159,7 +160,7 @@ prepare() {
 
     cd "${srcdir}/${pkgbase}-${pkgver}"
     patch -i "${srcdir}/0001-python_no_libs.patch" -p1
-    #patch -i "${srcdir}/0002-fix_linking_rmm.patch" -p1
+    patch -i "${srcdir}/0002-install_federated_proto.patch" -p1
     cd "${srcdir}/${pkgbase}-${pkgver}/dmlc-core"
     patch -i "${srcdir}/dmlc_core-0001-disable_hdfs_static.patch" -p1
     patch -i "${srcdir}/dmlc_core-0002-fix_azure_storage_build.patch" -p1
