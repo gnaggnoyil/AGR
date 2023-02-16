@@ -5,7 +5,7 @@
 _pkgbasename=thrust
 pkgname=${_pkgbasename}-rapidsai
 pkgver=1.17.2
-pkgrel=1
+pkgrel=2
 pkgdesc='A C++ parallel programming library which resembles the C++ Standard Library (version following rapidsai)'
 arch=('x86_64' 'aarch64')
 url="https://github.com/thrust/${_pkgbasename}"
@@ -16,14 +16,22 @@ optdepends=(
     'openmp: for OMP backend'
     'intel-tbb: for TBB backend'
 )
+_rapids_cmake_tag='c7a28304639a2ed460181b4753f3280c7833c718'
 source=(
     "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/thrust/${_pkgbasename}/archive/${pkgver}.tar.gz"
     "cub-${pkgver}.tar.gz::https://github.com/thrust/cub/archive/${pkgver}.tar.gz"
+    # For patches in rapids-cmake that will apply to thrust.
+    "rapids-cmake-${_rapids_cmake_tag}.tar.gz::https://github.com/rapidsai/rapids-cmake/archive/${_rapids_cmake_tag}.tar.gz"
 )
 sha256sums=('d021e37f5aac30fd1b9737865399feb57db8e601ae2fc0af3cd41784435e9523'
-            '1013a595794548c359f22c07e1f8c620b97e3a577f7e8496d9407f74566a3e2a')
+            '1013a595794548c359f22c07e1f8c620b97e3a577f7e8496d9407f74566a3e2a'
+            'ac5c6764e0a11fbfb7d84ff2fc602abe644c244ae6abfc024851aad35096fa97')
 
 prepare() {
+    cd "${srcdir}/${_pkgbasename}-${pkgver}"
+    patch -i "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/rapids-cmake/cpm/patches/Thrust/transform_iter_with_reduce_by_key.diff" -p1
+    patch -i "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/rapids-cmake/cpm/patches/Thrust/install_rules.diff" -p1
+
     cd "${srcdir}/${_pkgbasename}-${pkgver}/dependencies"
     rm -d "cub"
     ln -s "${srcdir}/cub-${pkgver}" "${srcdir}/${_pkgbasename}-${pkgver}/dependencies/cub"
