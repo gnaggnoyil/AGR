@@ -35,7 +35,7 @@ pkgname=(
     xgboost-cuda
     python-xgboost
 )
-pkgver=1.7.1
+pkgver=1.7.3
 pkgrel=1
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
@@ -115,9 +115,13 @@ makedepends=(
     
     "${_depends_python_xgboost[@]}"
 )
+# Disable debug option for now for the same reason. Also it seems there's only
+# `xgboost-debug` package but no `xgboost-cuda-debug` package. Does it mean
+# something?
+options=(!debug)
 _dmlc_core_tag='dfd9365264a060a5096734b7d892e1858b6d2722'
 _cub_tag='af39ee264f4627608072bf54730bf3a862e56875'
-_gputreeshap_tag='acb5be3c17e9adae34ac0b176da6ea8e197cb17e'
+_gputreeshap_tag='787259b412c18ab8d5f24bf2b8bd6a59ff8208f3'
 source=(
     #"git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
     #'git+https://github.com/dmlc/dmlc-core'
@@ -129,14 +133,16 @@ source=(
     "gputreeshap-${_gputreeshap_tag}.tar.gz::https://github.com/rapidsai/gputreeshap/archive/${_gputreeshap_tag}.tar.gz"
     # Generated with `git diff --ignore-submodules`
     '0001-python_no_libs.patch'
+    # Upstream fix isn't backported into current release so keep this patch as
+    # it is.
     '0002-install_federated_proto.patch'
     'dmlc_core-0001-disable_hdfs_static.patch'
     'dmlc_core-0002-fix_azure_storage_build.patch'
 )
-sha256sums=('f2ae7ed3890950ebf28f63eeb59f4d1c10e997fb765fee40e7a2982befd21ed9'
+sha256sums=('ed5487c81627e7401924e881398c9bda6efc12ee329bcd1aea20866434f4d98a'
             'd8c8a9ae75994af6b1e78f3ed5fd8bcb62068dadbc1487ab9ce589ee36a69c95'
             'cc626e006aa6ce961ddd8e82d97d5fc358c585fb27d3f8f1759efe9467f851b4'
-            'b40b9032963965f45f6b9902cd98a9c28ee28de761ff9525a98da29f6d5ec01f'
+            'cc0f7c1a3fd5fe1f9dcedcf959c923af4275ab6a8b1d07ea405af014ca6b371c'
             'ae7cc490448dd80a70a24ce1bb5db689c8d4ca28d9c4be93fe54082fb7a6fdf6'
             '44833c583eaaeed32abe5cc89b23bc6b3a088e15deabd2f2c1ddd30086d406af'
             'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866'
