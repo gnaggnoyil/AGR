@@ -1,7 +1,7 @@
 # Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
 
 _pkgbasename=rmm
-_pkgbasever=22.10
+_pkgbasever=23.02
 pkgname=rapids-memory-manager
 pkgdesc='RAPIDS Memory Manager'
 pkgver=${_pkgbasever}.00
@@ -12,6 +12,8 @@ license=('APACHE')
 depends=(
     'cuda' # For cudart, cuda itself not needed.
     # See rapids-cmake/rapids-cmake/cpm/versions.json
+    # The patches specified in `versions.json` needs to be added to those
+    # dependency packages, since... that how CPM works.
     'spdlog>=1.8.5'
     # rapids-cmake/rapids-cmake/cpm/thrust.cmake specifies `EXACT` for find_package(thrust)
     'thrust-rapidsai=1.17.2'
@@ -33,8 +35,10 @@ depends=(
 #    'cmake<3.23'
 #    'ninja'
 #)
-makedepends=('cmake')
-_rapids_cmake_tag='df6ef3c119bdb67d3358b3bd9ed0b4cdfb387d30'
+# Git is needed anyway as rapids-cmake uses this to implement its PATCH_COMMAND
+# even if we forces the use of already installed dependency packages.
+makedepends=('cmake' 'git')
+_rapids_cmake_tag='c7a28304639a2ed460181b4753f3280c7833c718'
 # This version number is specified in rapids-cmake/cpm/detail/download.cmake
 _cpmver=0.35.6
 source=(
@@ -48,8 +52,8 @@ source=(
     #"rapids-cmake-0001-correctly-find-thrust-version.patch"
     #"${_pkgbasename}-0001-avoid-uncessary-download.patch"
 )
-sha256sums=('2259fcd839eceab1066750ad473d6e6ac687a88fb1190dd7fe8ab6567b84379f'
-            '74227115586fbae6b6daf0f55c3c06440768ea398ca330c5cef6c2abb110f270'
+sha256sums=('ac5c6764e0a11fbfb7d84ff2fc602abe644c244ae6abfc024851aad35096fa97'
+            '15e05d1aed4efc7461b159b1054c5b3026b0b7f5ed8ed40a991dde0e7a024da6'
             '6b47e2a94b69c59acda5567401afc67ac53e9a95bf90cfd4f1e9792c4d8ec815')
 
 prepare() {
