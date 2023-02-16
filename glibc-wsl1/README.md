@@ -1,1 +1,0 @@
-This package is based on the work official Archlinux glibc package source and the work from the repository https://github.com/makotom/glibc-wsl , and re-arranged in the form of a package with a separate package name and with its corresponding PKGBUILD and necessary files.
