@@ -35,7 +35,7 @@ pkgname=(
     xgboost-cuda
     python-xgboost
 )
-pkgver=1.7.3
+pkgver=1.7.4
 pkgrel=1
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
@@ -139,7 +139,7 @@ source=(
     'dmlc_core-0001-disable_hdfs_static.patch'
     'dmlc_core-0002-fix_azure_storage_build.patch'
 )
-sha256sums=('ed5487c81627e7401924e881398c9bda6efc12ee329bcd1aea20866434f4d98a'
+sha256sums=('bedf9b61564c80f28a7ca8e74d71357539b6c81a0e5a548db10a48530a07424a'
             'd8c8a9ae75994af6b1e78f3ed5fd8bcb62068dadbc1487ab9ce589ee36a69c95'
             'cc626e006aa6ce961ddd8e82d97d5fc358c585fb27d3f8f1759efe9467f851b4'
             'cc0f7c1a3fd5fe1f9dcedcf959c923af4275ab6a8b1d07ea405af014ca6b371c'
