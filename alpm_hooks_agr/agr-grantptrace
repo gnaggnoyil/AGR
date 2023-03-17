@@ -1,0 +1,6 @@
+#!/bin/bash
+
+while read -r d; do
+	[[ -d $d ]] && continue
+	setcap cap_sys_ptrace=eip $d
+done

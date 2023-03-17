@@ -1,0 +1,12 @@
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = usr/bin/gdb
+
+[Action]
+Description = Granting ptrace permissions to triggered executables...
+When = PostTransaction
+Depends = libcap
+Exec = /usr/share/libalpm/scripts/agr-grantptrace
+NeedsTargets

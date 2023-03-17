@@ -1,0 +1,24 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
+pkgname=alpm_hooks_agr
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="Common libalpm hooks of AGR"
+arch=("x86_64")
+url='https://github.com/gnaggnoyil/AGR'
+license=("Unlicense")
+depends=(
+	'libcap' # for `setcap`
+)
+source=(
+	'agr-grantptrace'
+	'agr-grantptrace.hook'
+)
+sha256sums=('c957715d3b55e72b18ca7aa120159fd193c72c2b2353f6212cde20b670f24263'
+            '2aea54f394448d84e91cf4c8f8038fe667228fed307fd8757556f465498ed550')
+
+package() {
+	cd "${srcdir}"
+	install -Dm755 agr-grantptrace "${pkgdir}/usr/share/libalpm/scripts/agr-grantptrace"
+	install -Dm644 agr-grantptrace.hook "${pkgdir}/usr/share/libalpm/hooks/agr-grantptrace.hook"
+}
