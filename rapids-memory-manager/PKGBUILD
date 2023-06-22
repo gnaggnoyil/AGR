@@ -1,10 +1,9 @@
 # Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
 
 _pkgbasename=rmm
-_pkgbasever=23.02
 pkgname=rapids-memory-manager
 pkgdesc='RAPIDS Memory Manager'
-pkgver=${_pkgbasever}.00
+pkgver=23.06.00
 pkgrel=1
 arch=('x86_64')
 url="https://github.com/rapidsai/${_pkgbasename}"
@@ -13,8 +12,8 @@ depends=(
     'cuda' # For cudart, cuda itself not needed.
     # See rapids-cmake/rapids-cmake/cpm/versions.json
     # The patches specified in `versions.json` needs to be added to those
-    # dependency packages, since... that how CPM works.
-    'spdlog>=1.8.5'
+    # dependency packages, since... that's how CPM works.
+    'spdlog>=1.11.0'
     # rapids-cmake/rapids-cmake/cpm/thrust.cmake specifies `EXACT` for find_package(thrust)
     'thrust-rapidsai=1.17.2'
 )
@@ -38,22 +37,21 @@ depends=(
 # Git is needed anyway as rapids-cmake uses this to implement its PATCH_COMMAND
 # even if we forces the use of already installed dependency packages.
 makedepends=('cmake' 'git')
-_rapids_cmake_tag='c7a28304639a2ed460181b4753f3280c7833c718'
 # This version number is specified in rapids-cmake/cpm/detail/download.cmake
 _cpmver=0.35.6
 source=(
-    # RMM source specifies branch-${_pkgbasever} for rapids-cmake. Given that tag/v${_pkgbasever}.00a
-    # and branch-${_pkgbasever} are actuall different, we do the following to ensure a reproducible build:
-    # * Always choose the latest commit of branch-${_pkgbasever} when we started to bump version, and
-    #   never changes the commit id otherwise.
-    "rapids-cmake-${_rapids_cmake_tag}.tar.gz::https://github.com/rapidsai/rapids-cmake/archive/${_rapids_cmake_tag}.tar.gz"
+    # Starting from v23.02.00 the branch-${_pkgbasever} branch no longer got unfreezed, and tags now
+    # have a non-"a" version, both for rmm and for rapids-cmake. Plus v23.06.00 tag also have extra
+    # unimportant commits mainly related to repo tagging and etc. Thus We think it is safe to use
+    # corresponding tags now, even if rmm still specifies branch instead of tags for rapids-cmake
+    "rapids-cmake-${pkgver}.tar.gz::https://github.com/rapidsai/rapids-cmake/archive/v${pkgver}.tar.gz"
     "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/rapidsai/${_pkgbasename}/archive/v${pkgver}.tar.gz"
     "https://github.com/cpm-cmake/CPM.cmake/releases/download/v${_cpmver}/CPM.cmake"
     #"rapids-cmake-0001-correctly-find-thrust-version.patch"
     #"${_pkgbasename}-0001-avoid-uncessary-download.patch"
 )
-sha256sums=('ac5c6764e0a11fbfb7d84ff2fc602abe644c244ae6abfc024851aad35096fa97'
-            '15e05d1aed4efc7461b159b1054c5b3026b0b7f5ed8ed40a991dde0e7a024da6'
+sha256sums=('08d8ea10e9698da110bc353111d0f27244f9330d96531f4c7a0d3399eb5f668d'
+            '3dade75a6ba21041e47493a6514513aa01d40e19bba500f5e648e399744e1a24'
             '6b47e2a94b69c59acda5567401afc67ac53e9a95bf90cfd4f1e9792c4d8ec815')
 
 prepare() {
@@ -66,7 +64,7 @@ prepare() {
     cd "${srcdir}"
     mkdir -p build
     cd build
-    ln -s "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/RAPIDS.cmake" "RMM_RAPIDS.cmake"
+    ln -s "${srcdir}/rapids-cmake-${pkgver}/RAPIDS.cmake" "RMM_RAPIDS.cmake"
     mkdir -p cmake
     ln -s "${srcdir}/CPM.cmake" "cmake/CPM_${_cpmver}.cmake"
 }
@@ -77,7 +75,7 @@ build() {
         -DCMAKE_INSTALL_PREFIX=/usr
 
         -DThrust_ROOT=/opt/thrust-rapidsai
-        -DFETCHCONTENT_SOURCE_DIR_RAPIDS-CMAKE="${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
+        -DFETCHCONTENT_SOURCE_DIR_RAPIDS-CMAKE="${srcdir}/rapids-cmake-${pkgver}"
         -DCPM_LOCAL_PACKAGES_ONLY=ON
 
         # Disable check operations since check operations for cuda programs are not so well-defined.
