@@ -14,8 +14,8 @@
 set -u
 _pkgbasename=hadoop
 pkgname=${_pkgbasename}-xgboost
-pkgver=3.3.4
-pkgrel=3
+pkgver=3.3.5
+pkgrel=1
 pkgdesc='An open-source software for reliable, scalable, distributed computing (built for xgboost)'
 arch=('i686' 'x86_64')
 url='https://hadoop.apache.org'
@@ -35,7 +35,7 @@ source=(
     "${_pkgbasename}-resourcemanager.service"
     "${_pkgbasename}-secondarynamenode.service"
 )
-sha256sums=('a10fb474084c5d38b93ae901b453794d668ca98aa419a0546807b10cdae17827'
+sha256sums=('004008d5b730253f20b28443c0aa4c38554ee20c58cf954b0512e6453ef91fbf'
             '86adb9d28c5240023950339943e8d63bee91a99a18431699a8fb4839ee2a3b61'
             'f9495f39dfdda1b976ad26c5973f65755f086690cf4cfc9eee33060aac8205d2'
             'c6834f1355a0c40c7ccb6ac8813637ec78de05835015665cd9ed1f6d0470e716'
@@ -48,7 +48,7 @@ backup=(
     "etc/conf.d/${_pkgbasename}"
     "etc/profile.d/${_pkgbasename}"
     "etc/${_pkgbasename}/capacity-scheduler.xml"
-    # Should this file put in the backup?
+    # Should this file be put in the backup?
     "etc/${_pkgbasename}/configuration.xsl"
     "etc/${_pkgbasename}/container-executor.cfg"
     "etc/${_pkgbasename}/core-site.xml"
@@ -74,6 +74,7 @@ backup=(
 )
 
 build() {
+    export CXXFLAGS="${CXXFLAGS} -include cstdint"
     set -u
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
     cd "${srcdir}/${_pkgbasename}-rel-release-${pkgver}"
