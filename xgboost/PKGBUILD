@@ -36,7 +36,7 @@ pkgname=(
     python-xgboost
 )
 pkgver=1.7.6
-pkgrel=1
+pkgrel=2
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('APACHE')
@@ -183,7 +183,7 @@ prepare() {
 
 build() {
     _common_env=(
-        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.5
+        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.6
         HADOOP_WORKERS=/etc/hadoop/workers
         JAVA_HOME=/usr/lib/jvm/default
     )
