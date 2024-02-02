@@ -5,18 +5,22 @@
 _pkgbasename=thrust
 pkgname=${_pkgbasename}-rapidsai
 pkgver=1.17.2
-pkgrel=2
+pkgrel=3
 pkgdesc='A C++ parallel programming library which resembles the C++ Standard Library (version following rapidsai)'
 arch=('x86_64' 'aarch64')
 url="https://github.com/thrust/${_pkgbasename}"
-license=('APACHE')
+license=('Apache-2.0')
 makedepends=('cmake')
 optdepends=(
     'cuda: for CUDA backend'
     'openmp: for OMP backend'
     'intel-tbb: for TBB backend'
 )
-_rapids_cmake_tag='c7a28304639a2ed460181b4753f3280c7833c718'
+# For rmm 23.12.00
+# When specifying tag instead of commit the extracted rapids-cmake-XXX folder
+# seems to have different naming schemes
+_rapids_cmake_version='23.12.00'
+_rapids_cmake_tag="v${_rapids_cmake_version}"
 source=(
     "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/thrust/${_pkgbasename}/archive/${pkgver}.tar.gz"
     "cub-${pkgver}.tar.gz::https://github.com/thrust/cub/archive/${pkgver}.tar.gz"
@@ -25,16 +29,22 @@ source=(
 )
 sha256sums=('d021e37f5aac30fd1b9737865399feb57db8e601ae2fc0af3cd41784435e9523'
             '1013a595794548c359f22c07e1f8c620b97e3a577f7e8496d9407f74566a3e2a'
-            'ac5c6764e0a11fbfb7d84ff2fc602abe644c244ae6abfc024851aad35096fa97')
+            '81fe467e8b2b5a947c587ffefbea370b0140ab891f17e0e773a08aaee851b92d')
 
 prepare() {
-    cd "${srcdir}/${_pkgbasename}-${pkgver}"
-    patch -i "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/rapids-cmake/cpm/patches/Thrust/transform_iter_with_reduce_by_key.diff" -p1
-    patch -i "${srcdir}/rapids-cmake-${_rapids_cmake_tag}/rapids-cmake/cpm/patches/Thrust/install_rules.diff" -p1
-
+    # This needs to be put first since later there are patches that patch this
+    # submodule.
     cd "${srcdir}/${_pkgbasename}-${pkgver}/dependencies"
     rm -d "cub"
-    ln -s "${srcdir}/cub-${pkgver}" "${srcdir}/${_pkgbasename}-${pkgver}/dependencies/cub"
+    #ln -s "${srcdir}/cub-${pkgver}" "${srcdir}/${_pkgbasename}-${pkgver}/dependencies/cub"
+    cp -r "${srcdir}/cub-${pkgver}" "${srcdir}/${_pkgbasename}-${pkgver}/dependencies/"
+    cd "${srcdir}/${_pkgbasename}-${pkgver}/dependencies"
+    mv "cub-${pkgver}" "cub"
+
+    cd "${srcdir}/${_pkgbasename}-${pkgver}"
+    patch -i "${srcdir}/rapids-cmake-${_rapids_cmake_version}/rapids-cmake/cpm/patches/Thrust/reroot_support.diff" -p1
+    patch -i "${srcdir}/rapids-cmake-${_rapids_cmake_version}/rapids-cmake/cpm/patches/Thrust/transform_iter_with_reduce_by_key.diff" -p1
+    patch -i "${srcdir}/rapids-cmake-${_rapids_cmake_version}/rapids-cmake/cpm/patches/Thrust/install_rules.diff" -p1
 }
 
 build() {
