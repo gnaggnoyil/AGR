@@ -1,0 +1,21 @@
+diff --git a/python-package/packager/pep517.py b/python-package/packager/pep517.py
+index 2c4f9e3e6..8f0bc4b81 100644
+--- a/python-package/packager/pep517.py
++++ b/python-package/packager/pep517.py
+@@ -76,11 +76,11 @@ def build_wheel(
+         copytree_with_logging(TOPLEVEL_DIR / "xgboost", pkg_path, logger=logger)
+         lib_path = pkg_path / "lib"
+         lib_path.mkdir()
+-        libxgboost = locate_or_build_libxgboost(
+-            TOPLEVEL_DIR, build_dir=build_dir, build_config=build_config
+-        )
+-        if not build_config.use_system_libxgboost:
+-            copy_with_logging(libxgboost, lib_path, logger=logger)
++        #libxgboost = locate_or_build_libxgboost(
++        #    TOPLEVEL_DIR, build_dir=build_dir, build_config=build_config
++        #)
++        #if not build_config.use_system_libxgboost:
++        #    copy_with_logging(libxgboost, lib_path, logger=logger)
+ 
+         with cd(workspace):
+             wheel_name = hatchling.build.build_wheel(

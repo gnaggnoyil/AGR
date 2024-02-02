@@ -35,11 +35,11 @@ pkgname=(
     xgboost-cuda
     python-xgboost
 )
-pkgver=1.7.6
-pkgrel=2
+pkgver=2.0.3
+pkgrel=1
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
-license=('APACHE')
+license=('Apache-2.0')
 _dependsbase=(
     # Required for USE_HDFS
     # When running extra-x86_64-build or makechrootpkg, a specific package that
@@ -61,6 +61,9 @@ _dependsbase=(
     # azure-storage-cpp
     #'openssl' # May build a new package with openssl-1.0
     'azure-storage-cpp'
+    # The python package seems to be using pyarrow, yet no idea why devs aren't
+    # listing pyarrow as a dep.
+    'arrow'
 )
 _depends_xgboost_cuda=(
     'cuda'
@@ -90,6 +93,12 @@ _depends_python_xgboost=(
     'python-numpy'
     'python-scipy'
 )
+_makedepends_python_xgboost=(
+    'python-build'
+    'python-installer'
+    'python-wheel'
+    'python-hatchling>=1.12.1'
+)
 # TODO: check if some optdepends are needed as makedepends too
 # Some of them are already needed for testing python package.
 _optdepends_python_xgboost=(
@@ -107,23 +116,19 @@ _optdepends_python_xgboost=(
 )
 makedepends=(
     'cmake'
-    'python-setuptools'
-    # Future releases of xgboost will use `pyproject.toml` and `hatchling` to
-    # build python package. Be prepared.
-    #'python-hatchling>=1.12.1'
     
     "${_dependsbase[@]}"
     "${_depends_xgboost_cuda[@]}"
     "${_makedepends_xgboost_cuda[@]}"
     
     "${_depends_python_xgboost[@]}"
+    "${_makedepends_python_xgboost[@]}"
 )
 # Disable debug option for now for the same reason. Also it seems there's only
 # `xgboost-debug` package but no `xgboost-cuda-debug` package. Does it mean
 # something?
 options=(!debug)
-_dmlc_core_tag='81db539486ce6525b31b971545edffee2754aced'
-_cub_tag='af39ee264f4627608072bf54730bf3a862e56875'
+_dmlc_core_tag='ea21135fbb141ae103fb5fc960289b5601b468f2'
 _gputreeshap_tag='787259b412c18ab8d5f24bf2b8bd6a59ff8208f3'
 source=(
     #"git+https://github.com/dmlc/$pkgbase.git#tag=v$pkgver"
@@ -132,22 +137,16 @@ source=(
     #'git+https://github.com/rapidsai/gputreeshap.git'
     "${pkgbase}-${pkgver}.tar.gz::https://github.com/dmlc/xgboost/archive/v${pkgver}.tar.gz"
     "dmlc-core-${_dmlc_core_tag}.tar.gz::https://github.com/dmlc/dmlc-core/archive/${_dmlc_core_tag}.tar.gz"
-    "cub-${_cub_tag}.tar.gz::https://github.com/NVlabs/cub/archive/${_cub_tag}.tar.gz"
     "gputreeshap-${_gputreeshap_tag}.tar.gz::https://github.com/rapidsai/gputreeshap/archive/${_gputreeshap_tag}.tar.gz"
     # Generated with `git diff --ignore-submodules`
-    '0001-python_no_libs.patch'
-    # Upstream fix isn't backported into current release so keep this patch as
-    # it is.
-    '0002-install_federated_proto.patch'
+    '0001-python_assume_system_libxgboost.patch'
     'dmlc_core-0001-disable_hdfs_static.patch'
     'dmlc_core-0002-fix_azure_storage_build.patch'
 )
-sha256sums=('20acbdc04e5c724884788a51abbc400fc0d8497ae6cb5b404fef4e0d32fe1a0e'
-            'e618fdd5703c4e2048a367d687cf35dd6186904d895c4f0138678f8df0b5fce4'
-            'cc626e006aa6ce961ddd8e82d97d5fc358c585fb27d3f8f1759efe9467f851b4'
+sha256sums=('94e5deb27133459ec4172f3fed83971383366ad2a7d646b6f0b51f63484c5138'
+            '09f2e87dc627c423ad2ed0ac1735e7c73d7d515de78033096e1a88491d5549f9'
             'cc0f7c1a3fd5fe1f9dcedcf959c923af4275ab6a8b1d07ea405af014ca6b371c'
-            'ae7cc490448dd80a70a24ce1bb5db689c8d4ca28d9c4be93fe54082fb7a6fdf6'
-            '44833c583eaaeed32abe5cc89b23bc6b3a088e15deabd2f2c1ddd30086d406af'
+            'ca0d22bc37d4ea37090f6380f15211d50ce7083ed7db12b86e6d5a92388aef40'
             'b49a3dcf8f592a2115e9e0face713b2f0358b6b5e67365788fe0c9abd2c07866'
             '3071ec8ba86670d19457cac2766b8a69e59fea8069e1f3a562cd8837f4be9098')
 
@@ -162,14 +161,11 @@ prepare() {
     cd "${srcdir}/${pkgbase}-${pkgver}"
     rm -d dmlc-core
     cp -r "${srcdir}/dmlc-core-${_dmlc_core_tag}" "${srcdir}/${pkgbase}-${pkgver}/dmlc-core"
-    rm -d cub
-    cp -r "${srcdir}/cub-${_cub_tag}" "${srcdir}/${pkgbase}-${pkgver}/cub"
     rm -d gputreeshap
     cp -r "${srcdir}/gputreeshap-${_gputreeshap_tag}" "${srcdir}/${pkgbase}-${pkgver}/gputreeshap"
 
     cd "${srcdir}/${pkgbase}-${pkgver}"
-    patch -i "${srcdir}/0001-python_no_libs.patch" -p1
-    patch -i "${srcdir}/0002-install_federated_proto.patch" -p1
+    patch -i "${srcdir}/0001-python_assume_system_libxgboost.patch" -p1
     cd "${srcdir}/${pkgbase}-${pkgver}/dmlc-core"
     patch -i "${srcdir}/dmlc_core-0001-disable_hdfs_static.patch" -p1
     patch -i "${srcdir}/dmlc_core-0002-fix_azure_storage_build.patch" -p1
@@ -196,12 +192,21 @@ build() {
         # libraries does not stay on normal ld library path.
         -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
 
+        # See `xgboost/pull/9525`, this option will be removed in the later
+        # release of xgboost
+        #-DRABIT_BUILD_MPI=ON
+
         #-DUSE_OPENMP=ON # Default is ON
         -DUSE_HDFS=ON # Default is OFF
         # Required since aur/hadoop does not guarantee that a libhdfs.a exists.
         -DDMLC_HDFS_SHARED=ON
         -DUSE_S3=ON
         -DUSE_AZURE=ON # Default is OFF
+
+        -DPLUGIN_DENSE_PARSER=ON
+
+        # Options for only dmlc.
+        -DUSE_PARQUET=ON
     )
 
     # TODO: find out the difference of setting `-DBUILD_C_DOCS=ON`` in cmake and
@@ -225,9 +230,9 @@ build() {
     # Not sure how do we set xgboost for that
     _cuda_args=(
         -DUSE_CUDA=ON
+        #-DUSE_PER_THREAD_DEFAULT_STREAM=ON # Default is ON
         -DUSE_NCCL=ON
         -DBUILD_WITH_SHARED_NCCL=ON
-        -DBUILD_WITH_CUDA_CUB=ON # Required for CUDA >= 11.4
         -DPLUGIN_RMM=ON # Default is OFF
         -DPLUGIN_FEDERATED=ON # Default is OFF
         -DThrust_ROOT=/opt/thrust-rapidsai
@@ -240,7 +245,9 @@ build() {
         # will be named with `-noconfig.cmake` suffix, since that's what CMake
         # will choose for the name of the config when build type is omitted.
         # Anyway...
-        -DProtobuf_PROTOC_EXECUTABLE=/usr/bin/protoc
+        # As of 2024-01-31 the latest protobuf build in Archlinux seems to add a
+        # patch to avoid this mismatch in CMake config file.
+        #-DProtobuf_PROTOC_EXECUTABLE=/usr/bin/protoc
     )
 
     # For aur/hadoop, adding `--as-needed` in LDFLAGS will cause libxgboost.so
@@ -261,7 +268,14 @@ build() {
     echo "Building ${pkgbase}-cuda"
     cd "${srcdir}/${pkgbase}-${pkgver}-cuda/build"
     env ${_common_env[@]} ${_cuda_env[@]} cmake ${_common_args[@]} ${_cuda_args[@]} ..
+    # TODO: find out what was happening when nvcc emits "incompatible
+    # redefinition for option 'compiler-bindir', the last value of this option
+    # was used" warning.
     cmake --build . --config Release
+
+    echo "Building python-${pkgbase}"
+    cd "${srcdir}/${pkgbase}-${pkgver}/python-package"
+    python -m build --wheel --no-isolation -Cuse_system_libxgboost=True
 }
 
 package_xgboost() {
@@ -297,7 +311,8 @@ package_python-xgboost() {
     conflicts=('python-xgboost-git')
 
     cd "${srcdir}/${pkgbase}-${pkgver}/python-package"
-    python setup.py install --root="${pkgdir}" --optimize=1 --use-system-libxgboost
+    #python setup.py install --root="${pkgdir}" --optimize=1 --use-system-libxgboost
+    python -m installer dist/*.whl --destdir="${pkgdir}" --compile-bytecode=2
     #pip install -v . --config-settings use_system_libxgboost=True #--config-settings optimize=True
     install -Dm644 "${srcdir}/${pkgbase}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${_pkgname}/LICENSE"
 }
