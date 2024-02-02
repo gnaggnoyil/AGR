@@ -3,11 +3,11 @@
 _pkgbasename=rmm
 pkgname=rapids-memory-manager
 pkgdesc='RAPIDS Memory Manager'
-pkgver=23.06.00
+pkgver=23.12.00
 pkgrel=1
 arch=('x86_64')
 url="https://github.com/rapidsai/${_pkgbasename}"
-license=('APACHE')
+license=('Apache-2.0')
 depends=(
     'cuda' # For cudart, cuda itself not needed.
     # See rapids-cmake/rapids-cmake/cpm/versions.json
@@ -38,7 +38,7 @@ depends=(
 # even if we forces the use of already installed dependency packages.
 makedepends=('cmake' 'git')
 # This version number is specified in rapids-cmake/cpm/detail/download.cmake
-_cpmver=0.35.6
+_cpmver=0.38.5
 source=(
     # Starting from v23.02.00 the branch-${_pkgbasever} branch no longer got unfreezed, and tags now
     # have a non-"a" version, both for rmm and for rapids-cmake. Plus v23.06.00 tag also have extra
@@ -50,9 +50,9 @@ source=(
     #"rapids-cmake-0001-correctly-find-thrust-version.patch"
     #"${_pkgbasename}-0001-avoid-uncessary-download.patch"
 )
-sha256sums=('08d8ea10e9698da110bc353111d0f27244f9330d96531f4c7a0d3399eb5f668d'
-            '3dade75a6ba21041e47493a6514513aa01d40e19bba500f5e648e399744e1a24'
-            '6b47e2a94b69c59acda5567401afc67ac53e9a95bf90cfd4f1e9792c4d8ec815')
+sha256sums=('81fe467e8b2b5a947c587ffefbea370b0140ab891f17e0e773a08aaee851b92d'
+            '8a274613d9d114212d7cfd74a1082d551968487208a8ad5a84de33164623359a'
+            '192aa0ccdc57dfe75bd9e4b176bf7fb5692fd2b3e3f7b09c74856fc39572b31c')
 
 prepare() {
     #cd "${srcdir}/rapids-cmake-${_rapids_cmake_tag}"
