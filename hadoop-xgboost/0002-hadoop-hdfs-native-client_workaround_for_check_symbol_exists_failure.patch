@@ -1,0 +1,13 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt b/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt
+index 564aae459e5f..aa40ba43d46b 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt
++++ b/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt
+@@ -162,7 +162,7 @@ else (NOT NO_SASL)
+     message(STATUS "Compiling with NO SASL SUPPORT")
+ endif (NOT NO_SASL)
+ 
+-check_symbol_exists(explicit_bzero "string.h" HAVE_EXPLICIT_BZERO)
++set(HAVE_EXPLICIT_BZERO 1)
+ if(HAVE_EXPLICIT_BZERO)
+     add_definitions(-DHAVE_EXPLICIT_BZERO)
+ endif()

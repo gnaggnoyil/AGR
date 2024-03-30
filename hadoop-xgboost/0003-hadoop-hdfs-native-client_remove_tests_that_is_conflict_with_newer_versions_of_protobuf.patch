@@ -1,0 +1,12 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt b/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt
+index aa40ba43d46b..7913a107fc7f 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt
++++ b/hadoop-hdfs-project/hadoop-hdfs-native-client/src/main/native/libhdfspp/CMakeLists.txt
+@@ -261,7 +261,6 @@ include_directories( SYSTEM
+ add_subdirectory(third_party/uriparser2)
+ add_subdirectory(lib)
+ if(NOT HDFSPP_LIBRARY_ONLY)
+-    add_subdirectory(tests)
+     add_subdirectory(examples)
+     add_subdirectory(tools)
+ endif()
