@@ -1,0 +1,86 @@
+# Maintainer: Yonggang Li <gnaggnoyil@gmail.com>
+
+_pkgbasename=cccl
+pkgname=${_pkgbasename}-rapidsai
+pkgver=2.2.0
+pkgrel=1
+pkgdesc='CUDA C++ Core Libraries (version following rapidsai)'
+arch=('x86_64' 'aarch64')
+url="https://github.com/NVIDIA/${_pkgbasename}"
+license=('Apache-2.0 WITH LLVM-exception')
+replaces=('thrust-rapidsai')
+conflicts=('thrust-rapidsai')
+depends=(
+    'cuda' # For CUDAToolKit and NVCC for libcudacxx
+)
+makedepends=('cmake')
+optdepends=(
+    # Thrust optdepends. Cub optdepends are not listed, either due to not having
+    # any, or we haven't found any.
+    'cuda: for CUDA backend'
+    'openmp: for OMP backend'
+    'intel-tbb: for TBB backend'
+    # TODO: find libcudacxx optdepends
+)
+# For rmm 24.02.00
+# When specifying tag instead of commit the extracted rapids-cmake-XXX folder
+# seems to have different naming schemes
+_rapids_cmake_version='24.02.01'
+_rapids_cmake_tag="v${_rapids_cmake_version}"
+source=(
+    "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/NVIDIA/${_pkgbasename}/archive/v${pkgver}.tar.gz"
+    # For patches in rapids-cmake that will apply to <del>thrust</del>cccl.
+    "rapids-cmake-${_rapids_cmake_tag}.tar.gz::https://github.com/rapidsai/rapids-cmake/archive/${_rapids_cmake_tag}.tar.gz"
+)
+sha256sums=('e27678a9d583f9994e591367e864425e722050a9ee1d721b2bd736b442b768d4'
+            'be8a5a6351fc3d01f3032212e3f79e1d1d55f06dcac0de78ff20e17a308f20db')
+
+prepare() {
+    cd "${srcdir}/${_pkgbasename}-${pkgver}"
+    patch --ignore-whitespace -i "${srcdir}/rapids-cmake-${_rapids_cmake_version}/rapids-cmake/cpm/patches/cccl/bug_fixes.diff" -p1
+    # This patch contains mismatching whitespaces at the end of some patch lines. The rapids-cmake
+    # project uses `git apply --whitespace=fix` to workaround this. We use `patch -l` to emulate
+    # this behavior
+    patch --ignore-whitespace -i "${srcdir}/rapids-cmake-${_rapids_cmake_version}/rapids-cmake/cpm/patches/cccl/hide_kernels.diff" -p1
+    patch --ignore-whitespace -i "${srcdir}/rapids-cmake-${_rapids_cmake_version}/rapids-cmake/cpm/patches/cccl/revert_pr_211.diff" -p1
+}
+
+build() {
+    _cmake_args=(
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_PREFIX="/opt/${pkgname}"
+
+        # For Thrust, testing requires to be run on machines that have compatible hardware. Plus,
+        # the requirements for the hardware itself will probably increase depending on ctest args
+        # which might be able to be set by the user or in the makepkg.conf. Therefore we disable
+        # tests here for now.
+        -DTHRUST_ENABLE_HEADER_TESTING=OFF
+        -DTHRUST_ENABLE_TESTING=OFF
+        -DTHRUST_ENABLE_EXAMPLES=OFF
+        # Plus for cub, there are CPMAddPackage calls in cub/tests subdirectory. Disable cub tests
+        # as well.
+        -DCUB_ENABLE_HEADER_TESTING=OFF
+        -DCUB_ENABLE_TESTING=OFF
+        -DCUB_ENABLE_EXAMPLES=OFF
+        # Given both Thrust tests and CUB tests are disabled, perhaps it is preferred to disable
+        # libcudacxx tests as well.
+        -DLIBCUDACXX_ENABLE_LIBCUDACXX_TESTS=OFF
+        #-DLIBCUDACXX_ENABLE_LIBCXX_TESTS=OFF # Default is OFF
+        #-DLIBCUDACXX_ENABLE_LIBCXXABI_TESTS=OFF # Default is OFF
+        #-DLIBCUDACXX_ENABLE_LIBUNWIND_TESTS=OFF # Default is OFF
+        # TODO: check if other options have desired default value
+    )
+
+    cd "${srcdir}"
+    mkdir -p build
+    cd "${srcdir}/build"
+    cmake "${_cmake_args[@]}" "${srcdir}/${_pkgbasename}-${pkgver}"
+    cmake --build . --config Release
+}
+
+package() {
+    cd "${srcdir}/build"
+    DESTDIR=${pkgdir} cmake --install . --config Release
+
+    install -Dm644 "${srcdir}/${_pkgbasename}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
