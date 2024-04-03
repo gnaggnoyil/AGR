@@ -36,7 +36,7 @@ pkgname=(
     python-xgboost
 )
 pkgver=2.0.3
-pkgrel=1
+pkgrel=2
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('Apache-2.0')
@@ -179,7 +179,7 @@ prepare() {
 
 build() {
     _common_env=(
-        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.3.6
+        HADOOP_HDFS_HOME=/usr/lib/hadoop-3.4.0
         HADOOP_WORKERS=/etc/hadoop/workers
         JAVA_HOME=/usr/lib/jvm/default
     )
@@ -235,7 +235,7 @@ build() {
         -DBUILD_WITH_SHARED_NCCL=ON
         -DPLUGIN_RMM=ON # Default is OFF
         -DPLUGIN_FEDERATED=ON # Default is OFF
-        -DThrust_ROOT=/opt/thrust-rapidsai
+        -DCCCL_ROOT=/opt/cccl-rapidsai
         # As of 2023-06-23 the latest protobuf build in Archlinux specifies
         # `CMAKE_BUILD_TYPE` as `NONE` while the upstream protobuf cmake config
         # reads protoc executable location from `IMPORTED_LOCATION_NOCONFIG`.
