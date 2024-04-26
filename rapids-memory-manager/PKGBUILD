@@ -3,7 +3,7 @@
 _pkgbasename=rmm
 pkgname=rapids-memory-manager
 pkgdesc='RAPIDS Memory Manager'
-pkgver=24.02.00
+pkgver=24.04.00
 pkgrel=1
 arch=('x86_64')
 url="https://github.com/rapidsai/${_pkgbasename}"
@@ -40,7 +40,7 @@ makedepends=('cmake' 'git')
 # This version number is specified in rapids-cmake/cpm/detail/download.cmake
 _cpmver=0.38.5
 # In `fetch-rapids.cmake`
-_rapids_cmake_ver=24.02.01
+_rapids_cmake_ver=24.04.00
 source=(
     # Starting from v23.02.00 the branch-${_pkgbasever} branch no longer got unfreezed, and tags now
     # have a non-"a" version, both for rmm and for rapids-cmake. Plus v23.06.00 tag also have extra
@@ -54,8 +54,8 @@ source=(
     "${_pkgbasename}-${pkgver}.tar.gz::https://github.com/rapidsai/${_pkgbasename}/archive/v${pkgver}.tar.gz"
     "https://github.com/cpm-cmake/CPM.cmake/releases/download/v${_cpmver}/CPM.cmake"
 )
-sha256sums=('be8a5a6351fc3d01f3032212e3f79e1d1d55f06dcac0de78ff20e17a308f20db'
-            '63ddde8788727f0989f6397aed8a007ef414a577417b7d3cf39ca670c1bc4a91'
+sha256sums=('8dab8ae92e5a72e9167937c290ba63bc0680d371e72c72d9fcbc13e23c82ee44'
+            'bb20877c8d92b322dbcb348c2009040784189d3d3c48f93011e13c1b34f6a22f'
             '192aa0ccdc57dfe75bd9e4b176bf7fb5692fd2b3e3f7b09c74856fc39572b31c')
 
 prepare() {
