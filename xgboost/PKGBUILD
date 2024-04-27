@@ -36,7 +36,7 @@ pkgname=(
     python-xgboost
 )
 pkgver=2.0.3
-pkgrel=3
+pkgrel=4
 arch=('x86_64')
 url='https://github.com/dmlc/xgboost'
 license=('Apache-2.0')
